@@ -1,0 +1,15 @@
+{
+   "compilerOptions": {
+       "target": "es5",
+       "typeRoots": [
+           "src"
+       ],
+       "sourceMap": true,
+       "outDir": "./dist/",
+       "declaration": true
+   },
+   "include": [
+       "!src/babylon.d.ts",
+       "src/**/*"
+   ]
+}

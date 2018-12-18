@@ -1,0 +1,13 @@
+{
+    "name": "rtr-central",
+    "ip": "192.168.0.100",
+    "community": "comcacti",
+    "version": "2c",
+    "interfaces": {
+        "Gi1/0/22": "truc",
+        "Gi1/0/25": "bidule",
+        "Gi1/0/27": "machin",
+        "Gi1/0/1": null,
+        "Gi1/0/2": null
+    }
+}

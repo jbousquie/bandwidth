@@ -1,0 +1,26 @@
+[
+  {
+    "ifname": "Gi1/0/1",
+    "description": "GigabitEthernet1/0/1",
+    "speed": "1000000000",
+    "in": "1658667373",
+    "out": "1276373653",
+    "ts": "1545146360"
+  },
+  {
+    "ifname": "Gi1/0/2",
+    "description": "GigabitEthernet1/0/2",
+    "speed": "1000000000",
+    "in": "2802847985",
+    "out": "2547588468",
+    "ts": "1545146360"
+  },
+  {
+    "ifname": "Gi1/0/22",
+    "description": "GigabitEthernet1/0/22",
+    "speed": "1000000000",
+    "in": "2882320136",
+    "out": "3050198529",
+    "ts": "1545146360"
+  }
+]
