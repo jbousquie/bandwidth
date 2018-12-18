@@ -14,7 +14,14 @@ module BW {
             this.name = name;
         }
 
-
+        /**
+         * Ajoute une interface au Device
+         * @param iface
+         */
+        public addInterface(iface: Interface): Device {
+            this.interfaces.push(iface);
+            return this;
+        }
     }
 
     export class Interface {
@@ -66,7 +73,7 @@ module BW {
             xhr.addEventListener('readystatechange', function(){
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     const loadedDevice = JSON.parse(xhr.responseText);
-                    const monitoredDevice = that.getMonitoredByName(loadedDevice.name);
+                    const monitoredDevice = that.getDeviceByName(loadedDevice.name);
                     var device: Device;
                     if (monitoredDevice) {
                         device = monitoredDevice;
@@ -79,6 +86,20 @@ module BW {
                     device.snmpCommunity = loadedDevice.snmpCommunity;
                     device.snmpVersion = loadedDevice.snmpVersion;
                     device.description = loadedDevice.description;
+                    device.interfaces = [];
+                    let loadedInterfaces = loadedDevice.interfaces;
+                    if (loadedInterfaces) {
+                        for (let i = 0; i < loadedInterfaces.length; i++) {
+                            let loadedInterface = loadedInterfaces[i];
+                            const iface = new Interface(loadedInterface.name, device);
+                            iface.description = loadedInterface.description;
+                            iface.speed = loadedInterface.speed;
+                            iface.link = loadedInterface.link;
+                            device.addInterface(iface);
+                        }
+                    }
+                    
+                    
                 }
             });
             xhr.send();
@@ -86,8 +107,10 @@ module BW {
             return this;
         };
 
-        // Retourne le Device monitoré portant le nom "name" ou null si non trouvé
-        public getMonitoredByName(name: string): Device {
+        /**
+         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé 
+         * */
+        public getDeviceByName(name: string): Device {
             for (let i = 0; i < this.devices.length; i++) {
                 let device = this.devices[i];
                 if (device.name == name) {
@@ -97,6 +120,9 @@ module BW {
             return null;
         };
 
+        /**
+         * Recharge les dernières données de mesure actualisées depuis le fichier json
+         */
         public reloadData() {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
@@ -123,7 +149,6 @@ module BW {
     }
     
 
-
 }
 
 
@@ -138,6 +163,7 @@ const init =  function() {
     const monitor = new BW.Monitor(urlDevices, urlData, delay);
 
 
+    // À migrer dans renderer.ts !
     /*
     // creation de la scene 3D et du compteur FPS
     const canvas = document.querySelector('#renderCanvas');

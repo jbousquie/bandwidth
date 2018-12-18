@@ -10,6 +10,11 @@ declare module BW {
          * Constructor
          */
         constructor(name: string);
+        /**
+         * Ajoute une interface au Device
+         * @param iface
+         */
+        addInterface(iface: Interface): Device;
     }
     class Interface {
         device: Device;
@@ -39,7 +44,13 @@ declare module BW {
          * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements
          */
         reloadDevices(): Monitor;
-        getMonitoredByName(name: string): Device;
+        /**
+         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé
+         * */
+        getDeviceByName(name: string): Device;
+        /**
+         * Recharge les dernières données de mesure actualisées depuis le fichier json
+         */
         reloadData(): void;
         private _registerDataDownload;
         private _unregisterDataDownload;

@@ -7,6 +7,14 @@ var BW;
         function Device(name) {
             this.name = name;
         }
+        /**
+         * Ajoute une interface au Device
+         * @param iface
+         */
+        Device.prototype.addInterface = function (iface) {
+            this.interfaces.push(iface);
+            return this;
+        };
         return Device;
     }());
     BW.Device = Device;
@@ -46,7 +54,7 @@ var BW;
             xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     var loadedDevice = JSON.parse(xhr.responseText);
-                    var monitoredDevice = that.getMonitoredByName(loadedDevice.name);
+                    var monitoredDevice = that.getDeviceByName(loadedDevice.name);
                     var device;
                     if (monitoredDevice) {
                         device = monitoredDevice;
@@ -59,14 +67,28 @@ var BW;
                     device.snmpCommunity = loadedDevice.snmpCommunity;
                     device.snmpVersion = loadedDevice.snmpVersion;
                     device.description = loadedDevice.description;
+                    device.interfaces = [];
+                    var loadedInterfaces = loadedDevice.interfaces;
+                    if (loadedInterfaces) {
+                        for (var i = 0; i < loadedInterfaces.length; i++) {
+                            var loadedInterface = loadedInterfaces[i];
+                            var iface = new Interface(loadedInterface.name, device);
+                            iface.description = loadedInterface.description;
+                            iface.speed = loadedInterface.speed;
+                            iface.link = loadedInterface.link;
+                            device.addInterface(iface);
+                        }
+                    }
                 }
             });
             xhr.send();
             return this;
         };
         ;
-        // Retourne le Device monitoré portant le nom "name" ou null si non trouvé
-        Monitor.prototype.getMonitoredByName = function (name) {
+        /**
+         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé
+         * */
+        Monitor.prototype.getDeviceByName = function (name) {
             for (var i = 0; i < this.devices.length; i++) {
                 var device = this.devices[i];
                 if (device.name == name) {
@@ -76,6 +98,9 @@ var BW;
             return null;
         };
         ;
+        /**
+         * Recharge les dernières données de mesure actualisées depuis le fichier json
+         */
         Monitor.prototype.reloadData = function () {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
@@ -107,6 +132,7 @@ var init = function () {
     var urlDevices = 'http://localhost/BJS/bandwidth/bandwidth_conf.json'; // url des données des équipements
     // Création du Monitor de données
     var monitor = new BW.Monitor(urlDevices, urlData, delay);
+    // À migrer dans renderer.ts !
     /*
     // creation de la scene 3D et du compteur FPS
     const canvas = document.querySelector('#renderCanvas');
