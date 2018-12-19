@@ -69,7 +69,7 @@ fi;
 # jq -r pour supprimer les double quotes autour des strings renvoyées
 
 # Équipements
-listeNomsDevices=$(jq -r '.name + "'$sep'" + .ip + "'$sep'" + .community + "'$sep'" + .version' "$1")
+listeNomsDevices=$(jq -r '.[] | .name + "'$sep'" + .ip + "'$sep'" + .community + "'$sep'" + .version' "$1")
 pattern=$sep"*"
 # un tableau associatif indexé par le nom d'équipement pour chaque propriété : ip, community, version snmp
 declare -A deviceIP
@@ -89,7 +89,7 @@ done
 
 
 # Noms des interfaces : on concatène nomDevice + "@" + nomInterface
-listeNomsInterfaces=$(jq -r '.name + "@" + (.interfaces | keys[])' "$1")
+listeNomsInterfaces=$(jq -r '.[] | .name + "@" + (.interfaces | keys[])' "$1")
 ifnames=()
 for n in $listeNomsInterfaces; do
     ifnames+=($n)

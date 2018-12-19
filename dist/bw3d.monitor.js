@@ -12,7 +12,8 @@ var BW3D;
          * @param iface
          */
         Device.prototype.addInterface = function (iface) {
-            this.interfaces.push(iface);
+            this.interfaces[iface.name] = iface;
+            iface.device = this;
             return this;
         };
         return Device;
@@ -22,9 +23,8 @@ var BW3D;
         /**
          * Constructor
          */
-        function Interface(name, device) {
+        function Interface(name) {
             this.name = name;
-            this.device = device;
             this.speedIN = [];
             this.speedOUT = [];
         }
@@ -42,7 +42,7 @@ var BW3D;
             this.urlDevices = urlDevices;
             this.urlData = urlData;
             this.delay = (delay) ? delay : this.defaultDelay;
-            this.devices = [];
+            this.devices = {}; // tableau associatif des devices indexés par leur nom
             this.reloadDevices(); // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload(); // enregistrement de la récupération des données de mesure à intervalle régulier
             this.reloadData(); // récupération initiale immédiate des premières données
@@ -57,63 +57,53 @@ var BW3D;
             xhr.open('GET', this.urlDevices);
             xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    var loadedDevice = JSON.parse(xhr.responseText);
-                    var monitoredDevice = that.getDeviceByName(loadedDevice.name);
-                    var device;
-                    if (monitoredDevice) {
-                        device = monitoredDevice;
-                    }
-                    else {
-                        device = new Device(loadedDevice.name);
-                        that.devices.push(device);
-                    }
-                    device.ip = loadedDevice.ip;
-                    device.snmpCommunity = loadedDevice.snmpCommunity;
-                    device.snmpVersion = loadedDevice.snmpVersion;
-                    device.description = loadedDevice.description;
-                    device.interfaces = [];
-                    var loadedInterfaces = loadedDevice.interfaces;
-                    if (loadedInterfaces) {
-                        for (var i = 0; i < loadedInterfaces.length; i++) {
-                            var loadedInterface = loadedInterfaces[i];
-                            var iface = new Interface(loadedInterface.name, device);
-                            iface.description = loadedInterface.description;
-                            iface.speedMax = loadedInterface.speed;
-                            iface.link = loadedInterface.link;
-                            device.addInterface(iface);
+                    var loadedDevices = JSON.parse(xhr.responseText);
+                    for (var d = 0; d < loadedDevices.length; d++) {
+                        var loadedDevice = loadedDevices[d];
+                        var monitoredDevice = that.devices[loadedDevice.name];
+                        var device;
+                        if (monitoredDevice) {
+                            device = monitoredDevice;
+                        }
+                        else {
+                            device = new Device(loadedDevice.name);
+                            that.devices[loadedDevice.name] = device;
+                        }
+                        device.ip = loadedDevice.ip;
+                        device.snmpCommunity = loadedDevice.snmpCommunity;
+                        device.snmpVersion = loadedDevice.snmpVersion;
+                        device.description = loadedDevice.description;
+                        device.interfaces = [];
+                        var loadedInterfaces = loadedDevice.interfaces;
+                        if (loadedInterfaces) {
+                            for (var i = 0; i < loadedInterfaces.length; i++) {
+                                var loadedInterface = loadedInterfaces[i];
+                                var iface = new Interface(loadedInterface.name);
+                                iface.description = loadedInterface.description;
+                                iface.speedMax = loadedInterface.speed;
+                                iface.link = loadedInterface.link;
+                                device.addInterface(iface);
+                            }
                         }
                     }
                 }
             });
             xhr.send();
-            console.log("devices ok");
             return this;
-        };
-        ;
-        /**
-         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé
-         * */
-        Monitor.prototype.getDeviceByName = function (name) {
-            for (var i = 0; i < this.devices.length; i++) {
-                var device = this.devices[i];
-                if (device.name == name) {
-                    return device;
-                }
-            }
-            return null;
         };
         ;
         /**
          * Recharge les dernières données de mesure actualisées depuis le fichier json
          */
         Monitor.prototype.reloadData = function () {
+            var that = this;
             var xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
             xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
-                    if (data) {
-                        this.computeMetrics(data);
+                    if (data && data.length != 0) {
+                        that.computeMetrics(data);
                     }
                 }
             });
@@ -133,6 +123,14 @@ var BW3D;
          * @param data
          */
         Monitor.prototype.computeMetrics = function (data) {
+            for (var d = 0; d < data.length; d++) {
+                var dat = data[d];
+                var split = dat.ifname.split("@");
+                var deviceName = split[0];
+                var ifaceName = split[1];
+                var device = this.devices[deviceName];
+                var interface = device.interface[ifaceName];
+            }
             return this;
         };
         return Monitor;

@@ -5,7 +5,7 @@ declare module BW3D {
         ip: string;
         snmpCommunity: string;
         snmpVersion: string;
-        interfaces: Interface[];
+        interfaces: {};
         /**
          * Constructor
          */
@@ -27,13 +27,13 @@ declare module BW3D {
         /**
          * Constructor
          */
-        constructor(name: string, device: Device);
+        constructor(name: string);
     }
     /**
      * Monitor : gestionnaire des mesures
      */
     class Monitor {
-        devices: Device[];
+        devices: {};
         urlDevices: string;
         urlData: string;
         delay: number;
@@ -48,10 +48,6 @@ declare module BW3D {
          */
         reloadDevices(): Monitor;
         /**
-         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé
-         * */
-        getDeviceByName(name: string): Device;
-        /**
          * Recharge les dernières données de mesure actualisées depuis le fichier json
          */
         reloadData(): void;
@@ -61,7 +57,7 @@ declare module BW3D {
          * Calcule les vitesses à partir des données de mesure passées.
          * @param data
          */
-        computeMetrics(data: []): Monitor;
+        computeMetrics(data: any[]): Monitor;
     }
 }
 declare const init: () => void;

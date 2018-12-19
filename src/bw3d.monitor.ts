@@ -5,7 +5,7 @@ module BW3D {
         public ip: string;
         public snmpCommunity: string;
         public snmpVersion: string;
-        public interfaces: Interface[];
+        public interfaces: {};
 
         /**
          * Constructor
@@ -19,7 +19,8 @@ module BW3D {
          * @param iface
          */
         public addInterface(iface: Interface): Device {
-            this.interfaces.push(iface);
+            this.interfaces[iface.name] = iface;
+            iface.device = this;
             return this;
         }
     }
@@ -36,9 +37,8 @@ module BW3D {
         /**
          * Constructor
          */
-        constructor(name: string, device: Device) {
+        constructor(name: string) {
             this.name = name;
-            this.device = device;
             this.speedIN = [];
             this.speedOUT = [];
         }
@@ -48,7 +48,7 @@ module BW3D {
      * Monitor : gestionnaire des mesures
      */
     export class Monitor {
-        public devices: Device[];
+        public devices: {};
         public urlDevices: string;
         public urlData: string;
         public delay: number;
@@ -63,7 +63,7 @@ module BW3D {
             this.urlData = urlData;
             this.delay = (delay) ? delay : this.defaultDelay;
 
-            this.devices = [];
+            this.devices = {};                  // tableau associatif des devices indexés par leur nom
             this.reloadDevices();               // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload()        // enregistrement de la récupération des données de mesure à intervalle régulier
             this.reloadData();                  // récupération initiale immédiate des premières données
@@ -79,65 +79,54 @@ module BW3D {
             xhr.open('GET', this.urlDevices);
             xhr.addEventListener('readystatechange', function(){
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    const loadedDevice = JSON.parse(xhr.responseText);
-                    const monitoredDevice = that.getDeviceByName(loadedDevice.name);
-                    var device: Device;
-                    if (monitoredDevice) {
-                        device = monitoredDevice;
-                    } 
-                    else {
-                        device = new Device(loadedDevice.name);
-                        that.devices.push(device);
-                    }
-                    device.ip = loadedDevice.ip;
-                    device.snmpCommunity = loadedDevice.snmpCommunity;
-                    device.snmpVersion = loadedDevice.snmpVersion;
-                    device.description = loadedDevice.description;
-                    device.interfaces = [];
-                    let loadedInterfaces = loadedDevice.interfaces;
-                    if (loadedInterfaces) {
-                        for (let i = 0; i < loadedInterfaces.length; i++) {
-                            let loadedInterface = loadedInterfaces[i];
-                            const iface = new Interface(loadedInterface.name, device);
-                            iface.description = loadedInterface.description;
-                            iface.speedMax = loadedInterface.speed;
-                            iface.link = loadedInterface.link;
-                            device.addInterface(iface);
+                    const loadedDevices = JSON.parse(xhr.responseText);
+                    for (let d = 0; d < loadedDevices.length; d++) { 
+                        let loadedDevice = loadedDevices[d];
+                        const monitoredDevice = that.devices[loadedDevice.name];
+                        var device: Device;
+                        if (monitoredDevice) {
+                            device = monitoredDevice;
+                        } 
+                        else {
+                            device = new Device(loadedDevice.name);
+                            that.devices[loadedDevice.name] = device;
+                        }
+                        device.ip = loadedDevice.ip;
+                        device.snmpCommunity = loadedDevice.snmpCommunity;
+                        device.snmpVersion = loadedDevice.snmpVersion;
+                        device.description = loadedDevice.description;
+                        device.interfaces = [];
+                        let loadedInterfaces = loadedDevice.interfaces;
+                        if (loadedInterfaces) {
+                            for (let i = 0; i < loadedInterfaces.length; i++) {
+                                let loadedInterface = loadedInterfaces[i];
+                                const iface = new Interface(loadedInterface.name);
+                                iface.description = loadedInterface.description;
+                                iface.speedMax = loadedInterface.speed;
+                                iface.link = loadedInterface.link;
+                                device.addInterface(iface);
+                            }
                         }
                     }
-                    
                 }
             });
             xhr.send();
-            console.log("devices ok");
 
             return this;
-        };
-
-        /**
-         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé 
-         * */
-        public getDeviceByName(name: string): Device {
-            for (let i = 0; i < this.devices.length; i++) {
-                let device = this.devices[i];
-                if (device.name == name) {
-                    return device;
-                }
-            }
-            return null;
         };
 
         /**
          * Recharge les dernières données de mesure actualisées depuis le fichier json
          */
         public reloadData() {
+            const that = this;
             const xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
             xhr.addEventListener('readystatechange', function(){
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     const data = JSON.parse(xhr.responseText);
-                    if (data) {
-                        this.computeMetrics(data);
+                    if (data && data.length != 0) {
+                        that.computeMetrics(data);
                     }
                 }
             });
@@ -158,8 +147,16 @@ module BW3D {
          * Calcule les vitesses à partir des données de mesure passées.
          * @param data 
          */
-        public computeMetrics(data: []): Monitor {
-            
+        public computeMetrics(data: any[]): Monitor {
+            for (let d = 0; d < data.length; d++) {
+                const dat = data[d];
+                const split = dat.ifname.split("@");
+                const deviceName = split[0];
+                const ifaceName = split[1];
+                const device = this.devices[deviceName];
+                const interface = device.interface[ifaceName];
+               
+            }
             return this;
         }
 
@@ -178,7 +175,7 @@ const init =  function() {
 
     // Création du Monitor de données
     const monitor = new BW3D.Monitor(urlDevices, urlData, delay);
-
+    
     // À migrer dans renderer.ts !
     /*
     // creation de la scene 3D et du compteur FPS
