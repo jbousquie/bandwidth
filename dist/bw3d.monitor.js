@@ -1,83 +1,64 @@
-module BW {
-    export class Device {
-        public name: string;
-        public description: string;
-        public ip: string;
-        public snmpCommunity: string;
-        public snmpVersion: string;
-        public interfaces: Interface[];
-
+var BW;
+(function (BW) {
+    var Device = /** @class */ (function () {
         /**
          * Constructor
          */
-        constructor(name: string) {
+        function Device(name) {
             this.name = name;
         }
-
         /**
          * Ajoute une interface au Device
          * @param iface
          */
-        public addInterface(iface: Interface): Device {
+        Device.prototype.addInterface = function (iface) {
             this.interfaces.push(iface);
             return this;
-        }
-    }
-
-    export class Interface {
-        public device: Device;
-        public name: string;
-        public description: string;
-        public speed: number;
-        public link: string
-
+        };
+        return Device;
+    }());
+    BW.Device = Device;
+    var Interface = /** @class */ (function () {
         /**
          * Constructor
          */
-        constructor(name: string, device: Device) {
+        function Interface(name, device) {
             this.name = name;
             this.device = device;
         }
-    }
-
+        return Interface;
+    }());
+    BW.Interface = Interface;
     /**
      * Monitor : gestionnaire des mesures
      */
-    export class Monitor {
-        public devices: Device[];
-        public urlDevices: string;
-        public urlData: string;
-        public delay: number;
-        private interval: any;
-
+    var Monitor = /** @class */ (function () {
         /**
          * Constructor
          */
-        constructor(urlDevices: string, urlData: string, delay: number) {
+        function Monitor(urlDevices, urlData, delay) {
             this.urlDevices = urlDevices;
             this.urlData = urlData;
             this.delay = delay | 15000;
-
-            this.reloadDevices();               // récupération initiale des informations sur les équipements à monitorer
-            this._registerDataDownload()        // enregistrement de la récupération des données de mesure à intervalle régulier
+            this.reloadDevices(); // récupération initiale des informations sur les équipements à monitorer
+            this._registerDataDownload(); // enregistrement de la récupération des données de mesure à intervalle régulier
         }
-
         /**
          * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements
          */
-        public reloadDevices(): Monitor {
+        Monitor.prototype.reloadDevices = function () {
             // récupération initiale du fichier de descriptions des équipements
-            const that = this;
-            const xhr = new XMLHttpRequest();
+            var that = this;
+            var xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlDevices);
-            xhr.addEventListener('readystatechange', function(){
+            xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    const loadedDevice = JSON.parse(xhr.responseText);
-                    const monitoredDevice = that.getDeviceByName(loadedDevice.name);
-                    var device: Device;
+                    var loadedDevice = JSON.parse(xhr.responseText);
+                    var monitoredDevice = that.getDeviceByName(loadedDevice.name);
+                    var device;
                     if (monitoredDevice) {
                         device = monitoredDevice;
-                    } 
+                    }
                     else {
                         device = new Device(loadedDevice.name);
                         that.devices.push(device);
@@ -87,82 +68,70 @@ module BW {
                     device.snmpVersion = loadedDevice.snmpVersion;
                     device.description = loadedDevice.description;
                     device.interfaces = [];
-                    let loadedInterfaces = loadedDevice.interfaces;
+                    var loadedInterfaces = loadedDevice.interfaces;
                     if (loadedInterfaces) {
-                        for (let i = 0; i < loadedInterfaces.length; i++) {
-                            let loadedInterface = loadedInterfaces[i];
-                            const iface = new Interface(loadedInterface.name, device);
+                        for (var i = 0; i < loadedInterfaces.length; i++) {
+                            var loadedInterface = loadedInterfaces[i];
+                            var iface = new Interface(loadedInterface.name, device);
                             iface.description = loadedInterface.description;
                             iface.speed = loadedInterface.speed;
                             iface.link = loadedInterface.link;
                             device.addInterface(iface);
                         }
                     }
-                    
-                    
                 }
             });
             xhr.send();
-
             return this;
         };
-
+        ;
         /**
-         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé 
+         * Retourne le Device monitoré portant le nom "name" ou null si non trouvé
          * */
-        public getDeviceByName(name: string): Device {
-            for (let i = 0; i < this.devices.length; i++) {
-                let device = this.devices[i];
+        Monitor.prototype.getDeviceByName = function (name) {
+            for (var i = 0; i < this.devices.length; i++) {
+                var device = this.devices[i];
                 if (device.name == name) {
                     return device;
                 }
             }
             return null;
         };
-
+        ;
         /**
          * Recharge les dernières données de mesure actualisées depuis le fichier json
          */
-        public reloadData() {
-            const xhr = new XMLHttpRequest();
+        Monitor.prototype.reloadData = function () {
+            var xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
-            xhr.addEventListener('readystatechange', function(){
+            xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    const data = JSON.parse(xhr.responseText);
+                    var data = JSON.parse(xhr.responseText);
                     // BW.updateData(data)
                     console.log(data[data.length - 1].ts);
                 }
             });
             xhr.send();
-        }
-        private _registerDataDownload() {
-            this.interval = window.setInterval(function() {
-                    this.reloadData(this.urlData)
-                },
-                this.delay
-            );
-        }
-        private _unregisterDataDownload() {
+        };
+        Monitor.prototype._registerDataDownload = function () {
+            this.interval = window.setInterval(function () {
+                this.reloadData(this.urlData);
+            }, this.delay);
+        };
+        Monitor.prototype._unregisterDataDownload = function () {
             window.clearInterval(this.interval);
-        }
-
-    }
-    
-
-}
-
-
-const init =  function() {
+        };
+        return Monitor;
+    }());
+    BW.Monitor = Monitor;
+})(BW || (BW = {}));
+var init = function () {
     // paramètres (à déporter ultérieurement dans la conf)
-    const delay = 2000;     // délai de rafraichissement des données en ms
-    const urlData = 'http://localhost/BJS/bandwidth/bandwidth_results.json'; // url des données de mesure
-    const urlDevices = 'http://localhost/BJS/bandwidth/bandwidth_conf.json'  // url des données des équipements
-
-
+    var delay = 2000; // délai de rafraichissement des données en ms
+    var urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
+    var urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'; // url des données des équipements
     // Création du Monitor de données
-    const monitor = new BW.Monitor(urlDevices, urlData, delay);
-
-
+    var monitor = new BW.Monitor(urlDevices, urlData, delay);
     // À migrer dans renderer.ts !
     /*
     // creation de la scene 3D et du compteur FPS
@@ -189,3 +158,4 @@ const init =  function() {
     })
     */
 };
+//# sourceMappingURL=bw3d.monitor.js.map

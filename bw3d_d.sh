@@ -26,10 +26,10 @@ snmpgetPath=/usr/bin/snmpget
 # path de jq sur le système
 jqPath=/usr/bin/jq
 
-# fichier de log du script (nom très différent pour ne pas écraser involontairement les autres fichiers)
-ficLog=log_bw.log
+# fichier de log du script
+ficLog=bw3d.log
 # fichier des resultats des mesures, à placer dans le répertoire publié sur le web
-ficMes=bandwidth_results.json
+ficMes=bw3d.data.json
 
 # délai d'attente avant la prochaine mesure en secondes
 delay=1
@@ -60,6 +60,9 @@ if [ ! -e $1 ]; then
     echo 'Erreur : fichier '$1' non trouvé.'
     exit 1
 fi;
+
+# Purge du fichier de log
+>$ficLog
 
 # recupération des variables de la configuration
 ip=$($jqPath -r .ip "$1")

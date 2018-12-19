@@ -7,4 +7,4 @@ var BW;
     }());
     BW.Renderer = Renderer;
 })(BW || (BW = {}));
-//# sourceMappingURL=renderer.js.map
+//# sourceMappingURL=bw3d.rendered.js.map

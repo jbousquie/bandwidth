@@ -1,0 +1,10 @@
+{
+    "name": "bw3d",
+    "version": "1.0.0",
+    "dependencies": {
+        "uglifyjs": "latest"
+    },
+    "scripts": {
+        "build": "uglifyjs dist/bw3d.monitor.js dist/bw3d.renderer.js -o dist/bw3d.js"
+    }
+}
