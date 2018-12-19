@@ -1,26 +1,106 @@
 [
   {
-    "ifname": "Gi1/0/1",
+    "ifname": "rtr-central@Gi1/0/1",
     "description": "GigabitEthernet1/0/1",
     "speed": "1000000000",
-    "in": "170353254",
-    "out": "3195822948",
-    "ts": "1545207032"
+    "in": "251135057",
+    "out": "3329578837",
+    "ts": "1545231578"
   },
   {
-    "ifname": "Gi1/0/2",
+    "ifname": "rtr-central@Gi1/0/2",
     "description": "GigabitEthernet1/0/2",
     "speed": "1000000000",
-    "in": "784751145",
-    "out": "2301407096",
-    "ts": "1545207032"
+    "in": "1951104717",
+    "out": "2318944796",
+    "ts": "1545231578"
   },
   {
-    "ifname": "Gi1/0/22",
+    "ifname": "rtr-central@Gi1/0/22",
     "description": "GigabitEthernet1/0/22",
     "speed": "1000000000",
-    "in": "2186391826",
-    "out": "3730169794",
-    "ts": "1545207032"
+    "in": "1643274662",
+    "out": "3322829211",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/11",
+    "description": "GigabitEthernet0/11",
+    "speed": "1000000000",
+    "in": "884372106",
+    "out": "4271477661",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/15",
+    "description": "GigabitEthernet0/15",
+    "speed": "1000000000",
+    "in": "1810455112",
+    "out": "3815138254",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/2",
+    "description": "GigabitEthernet0/2",
+    "speed": "1000000000",
+    "in": "1679741929",
+    "out": "4125592148",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/3",
+    "description": "GigabitEthernet0/3",
+    "speed": "1000000000",
+    "in": "2057677102",
+    "out": "2658411477",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/4",
+    "description": "GigabitEthernet0/4",
+    "speed": "1000000000",
+    "in": "3518310647",
+    "out": "1004970008",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/5",
+    "description": "GigabitEthernet0/5",
+    "speed": "1000000000",
+    "in": "1320065592",
+    "out": "3560849501",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/6",
+    "description": "GigabitEthernet0/6",
+    "speed": "100000000",
+    "in": "1137889268",
+    "out": "2541631077",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/7",
+    "description": "GigabitEthernet0/7",
+    "speed": "1000000000",
+    "in": "863004048",
+    "out": "2960472503",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/8",
+    "description": "GigabitEthernet0/8",
+    "speed": "1000000000",
+    "in": "1020776659",
+    "out": "3469098014",
+    "ts": "1545231578"
+  },
+  {
+    "ifname": "swi-baie-serveur@Gi0/9",
+    "description": "GigabitEthernet0/9",
+    "speed": "100000000",
+    "in": "3231020136",
+    "out": "217972022",
+    "ts": "1545231578"
   }
 ]

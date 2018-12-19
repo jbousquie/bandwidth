@@ -1,4 +1,4 @@
-declare module BW {
+declare module BW3D {
     class Device {
         name: string;
         description: string;
@@ -20,7 +20,9 @@ declare module BW {
         device: Device;
         name: string;
         description: string;
-        speed: number;
+        speedMax: number;
+        speedIN: number[];
+        speedOUT: number[];
         link: string;
         /**
          * Constructor
@@ -36,6 +38,7 @@ declare module BW {
         urlData: string;
         delay: number;
         private interval;
+        private defaultDelay;
         /**
          * Constructor
          */
@@ -54,6 +57,11 @@ declare module BW {
         reloadData(): void;
         private _registerDataDownload;
         private _unregisterDataDownload;
+        /**
+         * Calcule les vitesses à partir des données de mesure passées.
+         * @param data
+         */
+        computeMetrics(data: []): Monitor;
     }
 }
 declare const init: () => void;

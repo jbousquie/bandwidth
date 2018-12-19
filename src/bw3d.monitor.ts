@@ -1,4 +1,4 @@
-module BW {
+module BW3D {
     export class Device {
         public name: string;
         public description: string;
@@ -28,8 +28,10 @@ module BW {
         public device: Device;
         public name: string;
         public description: string;
-        public speed: number;
-        public link: string
+        public speedMax: number;
+        public speedIN: number[];
+        public speedOUT: number[];
+        public link: string;
 
         /**
          * Constructor
@@ -37,6 +39,8 @@ module BW {
         constructor(name: string, device: Device) {
             this.name = name;
             this.device = device;
+            this.speedIN = [];
+            this.speedOUT = [];
         }
     }
 
@@ -49,6 +53,7 @@ module BW {
         public urlData: string;
         public delay: number;
         private interval: any;
+        private defaultDelay: 15000;
 
         /**
          * Constructor
@@ -56,10 +61,12 @@ module BW {
         constructor(urlDevices: string, urlData: string, delay: number) {
             this.urlDevices = urlDevices;
             this.urlData = urlData;
-            this.delay = delay | 15000;
+            this.delay = (delay) ? delay : this.defaultDelay;
 
+            this.devices = [];
             this.reloadDevices();               // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload()        // enregistrement de la récupération des données de mesure à intervalle régulier
+            this.reloadData();                  // récupération initiale immédiate des premières données
         }
 
         /**
@@ -93,16 +100,16 @@ module BW {
                             let loadedInterface = loadedInterfaces[i];
                             const iface = new Interface(loadedInterface.name, device);
                             iface.description = loadedInterface.description;
-                            iface.speed = loadedInterface.speed;
+                            iface.speedMax = loadedInterface.speed;
                             iface.link = loadedInterface.link;
                             device.addInterface(iface);
                         }
                     }
                     
-                    
                 }
             });
             xhr.send();
+            console.log("devices ok");
 
             return this;
         };
@@ -129,21 +136,31 @@ module BW {
             xhr.addEventListener('readystatechange', function(){
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     const data = JSON.parse(xhr.responseText);
-                    // BW.updateData(data)
-                    console.log(data[data.length - 1].ts);
+                    if (data) {
+                        this.computeMetrics(data);
+                    }
                 }
             });
             xhr.send();
         }
         private _registerDataDownload() {
+            const that = this;
             this.interval = window.setInterval(function() {
-                    this.reloadData(this.urlData)
+                    that.reloadData();
                 },
-                this.delay
+                that.delay
             );
         }
         private _unregisterDataDownload() {
             window.clearInterval(this.interval);
+        }
+        /**
+         * Calcule les vitesses à partir des données de mesure passées.
+         * @param data 
+         */
+        public computeMetrics(data: []): Monitor {
+            
+            return this;
         }
 
     }
@@ -160,8 +177,7 @@ const init =  function() {
 
 
     // Création du Monitor de données
-    const monitor = new BW.Monitor(urlDevices, urlData, delay);
-
+    const monitor = new BW3D.Monitor(urlDevices, urlData, delay);
 
     // À migrer dans renderer.ts !
     /*

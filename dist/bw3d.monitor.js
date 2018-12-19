@@ -1,5 +1,5 @@
-var BW;
-(function (BW) {
+var BW3D;
+(function (BW3D) {
     var Device = /** @class */ (function () {
         /**
          * Constructor
@@ -17,7 +17,7 @@ var BW;
         };
         return Device;
     }());
-    BW.Device = Device;
+    BW3D.Device = Device;
     var Interface = /** @class */ (function () {
         /**
          * Constructor
@@ -25,10 +25,12 @@ var BW;
         function Interface(name, device) {
             this.name = name;
             this.device = device;
+            this.speedIN = [];
+            this.speedOUT = [];
         }
         return Interface;
     }());
-    BW.Interface = Interface;
+    BW3D.Interface = Interface;
     /**
      * Monitor : gestionnaire des mesures
      */
@@ -39,9 +41,11 @@ var BW;
         function Monitor(urlDevices, urlData, delay) {
             this.urlDevices = urlDevices;
             this.urlData = urlData;
-            this.delay = delay | 15000;
+            this.delay = (delay) ? delay : this.defaultDelay;
+            this.devices = [];
             this.reloadDevices(); // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload(); // enregistrement de la récupération des données de mesure à intervalle régulier
+            this.reloadData(); // récupération initiale immédiate des premières données
         }
         /**
          * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements
@@ -74,7 +78,7 @@ var BW;
                             var loadedInterface = loadedInterfaces[i];
                             var iface = new Interface(loadedInterface.name, device);
                             iface.description = loadedInterface.description;
-                            iface.speed = loadedInterface.speed;
+                            iface.speedMax = loadedInterface.speed;
                             iface.link = loadedInterface.link;
                             device.addInterface(iface);
                         }
@@ -82,6 +86,7 @@ var BW;
                 }
             });
             xhr.send();
+            console.log("devices ok");
             return this;
         };
         ;
@@ -107,31 +112,40 @@ var BW;
             xhr.addEventListener('readystatechange', function () {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
-                    // BW.updateData(data)
-                    console.log(data[data.length - 1].ts);
+                    if (data) {
+                        this.computeMetrics(data);
+                    }
                 }
             });
             xhr.send();
         };
         Monitor.prototype._registerDataDownload = function () {
+            var that = this;
             this.interval = window.setInterval(function () {
-                this.reloadData(this.urlData);
-            }, this.delay);
+                that.reloadData();
+            }, that.delay);
         };
         Monitor.prototype._unregisterDataDownload = function () {
             window.clearInterval(this.interval);
         };
+        /**
+         * Calcule les vitesses à partir des données de mesure passées.
+         * @param data
+         */
+        Monitor.prototype.computeMetrics = function (data) {
+            return this;
+        };
         return Monitor;
     }());
-    BW.Monitor = Monitor;
-})(BW || (BW = {}));
+    BW3D.Monitor = Monitor;
+})(BW3D || (BW3D = {}));
 var init = function () {
     // paramètres (à déporter ultérieurement dans la conf)
     var delay = 2000; // délai de rafraichissement des données en ms
     var urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
     var urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'; // url des données des équipements
     // Création du Monitor de données
-    var monitor = new BW.Monitor(urlDevices, urlData, delay);
+    var monitor = new BW3D.Monitor(urlDevices, urlData, delay);
     // À migrer dans renderer.ts !
     /*
     // creation de la scene 3D et du compteur FPS
