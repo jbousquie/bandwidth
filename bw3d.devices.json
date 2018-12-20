@@ -1,34 +1,37 @@
-{
-    "name": "rtr-central",
-    "ip": "192.168.0.100",
-    "description": "routeur central",
-    "community": "comcacti",
-    "version": "2c",
-    "coordinates": [0, 5, 0],
-    "interfaces": {
-        "Gi1/0/22": "truc",
-        "Gi1/0/25": "bidule",
-        "Gi1/0/27": "machin",
-        "Gi1/0/1": null,
-        "Gi1/0/2": null
+[
+    {
+        "name": "rtr-central",
+        "ip": "192.168.0.100",
+        "description": "routeur central",
+        "community": "comcacti",
+        "version": "2c",
+        "coordinates": [0, 5, 0],
+        "interfaces": {
+            "Gi1/0/22": "truc",
+            "Gi1/0/25": "bidule",
+            "Gi1/0/27": "machin",
+            "Gi1/0/1": null,
+            "Gi1/0/2": null
+        }
+    },
+    
+    {
+        "name": "swi-baie-serveur",
+        "ip": "192.168.0.101",
+        "community": "comcacti",
+        "version": "2c",
+        "coordinates": [150, 0, 80],
+        "interfaces": { 
+            "Gi0/11": "swi-baie-3-3",
+            "Gi0/15": "swi-ndv",
+            "Gi0/2": "swi-baie-0-2",
+            "Gi0/3": "swi-baie-1-1",
+            "Gi0/4": "swi-baie-1-2",
+            "Gi0/5": "swi-baie-1-3",
+            "Gi0/6": "swi-baie-2-1",
+            "Gi0/7": "swi-baie-2-2",
+            "Gi0/8": "swi-baie-2-3",
+            "Gi0/9": "swi-baie-3-1"
+        }
     }
-}
-{
-    "name": "swi-baie-serveur",
-    "ip": "192.168.0.101",
-    "community": "comcacti",
-    "version": "2c",
-    "coordinates": [150, 0, 80],
-    "interfaces": { 
-        "Gi0/11": "swi-baie-3-3",
-        "Gi0/15": "swi-ndv",
-        "Gi0/2": "swi-baie-0-2",
-        "Gi0/3": "swi-baie-1-1",
-        "Gi0/4": "swi-baie-1-2",
-        "Gi0/5": "swi-baie-1-3",
-        "Gi0/6": "swi-baie-2-1",
-        "Gi0/7": "swi-baie-2-2",
-        "Gi0/8": "swi-baie-2-3",
-        "Gi0/9": "swi-baie-3-1"
-    }
-}
+]

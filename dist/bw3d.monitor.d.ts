@@ -5,6 +5,7 @@ declare module BW3D {
         ip: string;
         snmpCommunity: string;
         snmpVersion: string;
+        position: number[];
         interfaces: {};
         /**
          * Constructor
@@ -58,6 +59,11 @@ declare module BW3D {
          * @param data
          */
         computeMetrics(data: any[]): Monitor;
+        /**
+         * Crée un objet Renderer et lance la visualisation du type choisi.
+         * @param type
+         */
+        visualize(type: number): Monitor;
     }
     /**
      * Metrics : mesure de bande passante

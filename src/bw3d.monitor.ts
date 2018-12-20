@@ -5,6 +5,7 @@ module BW3D {
         public ip: string;
         public snmpCommunity: string;
         public snmpVersion: string;
+        public position: number[];
         public interfaces: {};
 
         /**
@@ -91,9 +92,10 @@ module BW3D {
                             that.devices[loadedDevice.name] = device;
                         }
                         device.ip = loadedDevice.ip;
-                        device.snmpCommunity = loadedDevice.snmpCommunity;
-                        device.snmpVersion = loadedDevice.snmpVersion;
+                        device.snmpCommunity = loadedDevice.community;
+                        device.snmpVersion = loadedDevice.version;
                         device.description = loadedDevice.description;
+                        device.position = loadedDevice.coordinates;
                         device.interfaces = [];
                         let loadedInterfaces = loadedDevice.interfaces;
                         if (loadedInterfaces) {
@@ -223,7 +225,15 @@ module BW3D {
             }
             return this;
         }
-
+        /**
+         * Crée un objet Renderer et lance la visualisation du type choisi.
+         * @param type 
+         */
+        public visualize(type: number): Monitor {
+            const renderer = new BW3D.Renderer(this, type);
+            renderer.start(); 
+            return this;
+        }
     }
     
     /**
@@ -241,6 +251,7 @@ module BW3D {
             this.interface = iface; 
         }
     }
+
 }
 
 
@@ -250,33 +261,9 @@ const init =  function() {
     const urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
     const urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'  // url des données des équipements
 
+    const type = BW3D.Renderer.HeartBeat;
 
-    // Création du Monitor de données
+    // Création du Monitor de données, puis du Gestionnaire de rendu
     const monitor = new BW3D.Monitor(urlDevices, urlData, delay);
-    
-    // À migrer dans renderer.ts !
-    /*
-    // creation de la scene 3D et du compteur FPS
-    const canvas = document.querySelector('#renderCanvas');
-    const engine = new BABYLON.Engine(canvas, true);
-    const scene = createScene(canvas, engine);
-    window.addEventListener("resize", function() {
-        engine.resize();
-    });
-
-
-    const limit = 20;
-    var count = 0;
-    var fps = 0;
-    const fpsElem = document.querySelector("#fps");
-    engine.runRenderLoop(function(){
-        count++;
-        scene.render();
-        if (count == limit) {
-            fps = Math.floor(engine.getFps());
-            fpsElem.innerHTML = fps.toString() + " fps";
-            count = 0;
-        }
-    })
-    */
+    monitor.visualize(type);
 };

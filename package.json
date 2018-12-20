@@ -5,6 +5,6 @@
         "uglifyjs": "latest"
     },
     "scripts": {
-        "build": "uglifyjs dist/bw3d.monitor.js dist/bw3d.renderer.js -o dist/bw3d.js"
+        "build": "uglifyjs dist/*.js -o dist/bw3d.js"
     }
 }
