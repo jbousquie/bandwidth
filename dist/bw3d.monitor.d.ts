@@ -20,9 +20,8 @@ declare module BW3D {
         device: Device;
         name: string;
         description: string;
-        speedMax: number;
-        speedIN: number[];
-        speedOUT: number[];
+        metrics: Metrics;
+        metricsLog: Metrics[];
         link: string;
         /**
          * Constructor
@@ -36,6 +35,7 @@ declare module BW3D {
         devices: {};
         urlDevices: string;
         urlData: string;
+        interfaceData: {};
         delay: number;
         private interval;
         private defaultDelay;
@@ -58,6 +58,18 @@ declare module BW3D {
          * @param data
          */
         computeMetrics(data: any[]): Monitor;
+    }
+    /**
+     * Metrics : mesure de bande passante
+     */
+    class Metrics {
+        speedIn: number;
+        speedOut: number;
+        rateIn: number;
+        rateOut: number;
+        ts: Date;
+        interface: Interface;
+        constructor(iface: Interface);
     }
 }
 declare const init: () => void;

@@ -29,9 +29,8 @@ module BW3D {
         public device: Device;
         public name: string;
         public description: string;
-        public speedMax: number;
-        public speedIN: number[];
-        public speedOUT: number[];
+        public metrics: Metrics;
+        public metricsLog: Metrics[];
         public link: string;
 
         /**
@@ -39,8 +38,6 @@ module BW3D {
          */
         constructor(name: string) {
             this.name = name;
-            this.speedIN = [];
-            this.speedOUT = [];
         }
     }
 
@@ -48,12 +45,13 @@ module BW3D {
      * Monitor : gestionnaire des mesures
      */
     export class Monitor {
-        public devices: {};
-        public urlDevices: string;
-        public urlData: string;
-        public delay: number;
-        private interval: any;
-        private defaultDelay: 15000;
+        public devices: {};                 // Annuaire des équipements
+        public urlDevices: string;          // URL de la conf des équipements
+        public urlData: string;             // URL des data
+        public interfaceData: {};           // Annuaire des données collectées par interface
+        public delay: number;               // délai de récupération des data
+        private interval: any;              // intervalle + fonction de callback de récupération des data
+        private defaultDelay: 15000;        // délai par défaut
 
         /**
          * Constructor
@@ -64,6 +62,7 @@ module BW3D {
             this.delay = (delay) ? delay : this.defaultDelay;
 
             this.devices = {};                  // tableau associatif des devices indexés par leur nom
+            this.interfaceData = {};            // tableau associatifs des données indexées par les noms d'interface
             this.reloadDevices();               // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload()        // enregistrement de la récupération des données de mesure à intervalle régulier
             this.reloadData();                  // récupération initiale immédiate des premières données
@@ -98,12 +97,10 @@ module BW3D {
                         device.interfaces = [];
                         let loadedInterfaces = loadedDevice.interfaces;
                         if (loadedInterfaces) {
-                            for (let i = 0; i < loadedInterfaces.length; i++) {
-                                let loadedInterface = loadedInterfaces[i];
-                                const iface = new Interface(loadedInterface.name);
-                                iface.description = loadedInterface.description;
-                                iface.speedMax = loadedInterface.speed;
-                                iface.link = loadedInterface.link;
+                            for (let n in loadedInterfaces) {
+                                const iface = new Interface(n);
+                                iface.link = loadedInterfaces[n];
+                                iface.metricsLog = [];
                                 device.addInterface(iface);
                             }
                         }
@@ -139,36 +136,117 @@ module BW3D {
                 },
                 that.delay
             );
+            this._unregisterDataDownload();
         }
         private _unregisterDataDownload() {
-            window.clearInterval(this.interval);
+            const that = this;
+            window.onunload = function() {
+                window.clearInterval(that.interval);
+            };
         }
         /**
          * Calcule les vitesses à partir des données de mesure passées.
          * @param data 
          */
         public computeMetrics(data: any[]): Monitor {
+            const interfaceData = this.interfaceData;
+
+            // Reset des tableaux des interfaceData
+            for (let n in interfaceData) {
+                    if (interfaceData[n] === undefined) {
+                        interfaceData[n] = [];
+                    }
+                    interfaceData[n].length = 0;
+            }
+            
+            // Boucle sur les mesures issues du fichier json
             for (let d = 0; d < data.length; d++) {
-                const dat = data[d];
-                const split = dat.ifname.split("@");
+                let dat = data[d];
+                let ifname = dat.ifname;
+
+                // au cas où une nouvelle interce apparaisse dans les mesures
+                if (interfaceData[ifname] === undefined) {
+                    interfaceData[ifname] = [];
+
+                }
+                let ifDataArray = interfaceData[ifname];
+                ifDataArray.push(dat);
+            }
+
+            // boucle sur les données par interface et calcul des vitesses
+            // il faut au moins deux mesures consécutives pour calculer une vitesse
+            for (let n in interfaceData) {
+                
+                // récupération des objets device, interface et metrics
+                const split = n.split("@");
                 const deviceName = split[0];
                 const ifaceName = split[1];
                 const device = this.devices[deviceName];
-                const interface = device.interface[ifaceName];
-               
+                const iface = device.interfaces[ifaceName];
+                const metricsLog = iface.metricsLog;
+
+                let ifDataArray = interfaceData[n];
+                for (let d = 1; d < ifDataArray.length; d++) {
+
+                    let speedIn = 0;
+                    let speedOut = 0;
+
+                    let current = ifDataArray[d];
+                    let previous = ifDataArray[d - 1];
+
+                    let deltaIn = current.in - previous.in;
+                    let deltaOut = current.out - previous.out;
+                    let deltaTime = current.ts - previous.ts;
+                    let speedMax = current.speed;
+
+                    if (deltaTime != 0) {
+                        speedIn = deltaIn / deltaTime;
+                        speedOut = deltaOut / deltaTime;
+                    }
+
+                    let i = d - 1;
+                    var newMetrics = metricsLog[i];
+                    if  (!newMetrics) {
+                        newMetrics = new Metrics(iface);
+                        metricsLog[i] = newMetrics;
+                    }
+
+                    newMetrics.speedIn = speedIn;
+                    newMetrics.speedOut = speedOut;
+                    newMetrics.rateIn = speedIn / speedMax;
+                    newMetrics.rateOut = speedOut / speedMax;
+                    newMetrics.ts = current.ts;
+
+                    iface.metrics = newMetrics;
+                }
+                iface.description = ifDataArray[ifDataArray.length - 1].description;
             }
             return this;
         }
 
     }
     
+    /**
+     * Metrics : mesure de bande passante
+     */
+    export class Metrics {
+        public speedIn: number;
+        public speedOut: number;
+        public rateIn: number;
+        public rateOut: number;
+        public ts: Date;
+        public interface: Interface;
 
+        constructor(iface: Interface) {
+            this.interface = iface; 
+        }
+    }
 }
 
 
 const init =  function() {
     // paramètres (à déporter ultérieurement dans la conf)
-    const delay = 2000;     // délai de rafraichissement des données en ms
+    const delay = 3000;     // délai de rafraichissement des données en ms
     const urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
     const urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'  // url des données des équipements
 

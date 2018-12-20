@@ -30,9 +30,9 @@ ficLog=bw3d.log
 ficMes=bw3d.data.json
 
 # délai d'attente avant la prochaine mesure en secondes
-delay=1
-# nombre de mesures à conserver
-nbMesures=1
+delay=3
+# nombre de mesures à conserver : au moins deux impérativement !
+nbMesures=2
 
 # Séparateur
 sep="@"
@@ -228,7 +228,7 @@ do
     # formatage du résultat JSON
     # http://support.gnip.com/articles/data-and-rule-management-with-jq.html
     # on passe par un fichier temporaire pour limiter le temps d'indisponibilité au web de $ficMes
-    jq '. | split("\n") | map( split(" ") | select(.[0] != null) | {ifname: .[0], description: .[1], speed: .[2], in: .[3], out: .[4], ts: .[5]} ) ' -R -s res.raw > tmp 
+    jq '. | split("\n") | map( split(" ") | select(.[0] != null) | {ifname: .[0], description: .[1], speed: .[2] | tonumber, in: .[3] | tonumber, out: .[4] | tonumber, ts: .[5] | tonumber} ) ' -R -s res.raw > tmp 
     cat tmp > $ficMes
     
     # attente avant prochaine mesure

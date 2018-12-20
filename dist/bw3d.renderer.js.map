@@ -1,1 +1,1 @@
-{"version":3,"file":"bw3d.renderer.js","sourceRoot":"","sources":["../src/bw3d.renderer.ts"],"names":[],"mappings":"AAAA,IAAO,IAAI,CAIV;AAJD,WAAO,IAAI;IACP;QAAA;QAEA,CAAC;QAAD,eAAC;IAAD,CAAC,AAFD,IAEC;IAFY,aAAQ,WAEpB,CAAA;AACL,CAAC,EAJM,IAAI,KAAJ,IAAI,QAIV"}
+{"version":3,"file":"bw3d.renderer.js","sourceRoot":"","sources":["../src/bw3d.renderer.ts"],"names":[],"mappings":"AAAA,IAAO,IAAI,CAIV;AAJD,WAAO,IAAI;IACP,MAAa,QAAQ;KAEpB;IAFY,aAAQ,WAEpB,CAAA;AACL,CAAC,EAJM,IAAI,KAAJ,IAAI,QAIV"}
