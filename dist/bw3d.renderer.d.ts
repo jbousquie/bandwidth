@@ -5,17 +5,11 @@ declare module BW3D {
         canvas: HTMLCanvasElement;
         scene: BABYLON.Scene;
         devices: {};
+        interfaceMetrics: {};
+        updatedMetrics: boolean;
         static HeartBeat: number;
         constructor(monitor: Monitor, type: number);
-        start(): void;
-    }
-    class BJSScene {
-        renderer: Renderer;
-        type: number;
-        engine: BABYLON.Engine;
-        canvas: HTMLCanvasElement;
-        scene: BABYLON.Scene;
-        devices: {};
-        constructor(renderer: Renderer, type: number);
+        start(): Renderer;
+        notify(message: string): Renderer;
     }
 }

@@ -37,15 +37,21 @@ declare module BW3D {
         urlDevices: string;
         urlData: string;
         interfaceData: {};
+        interfaceMetrics: {};
         delay: number;
+        isReady: boolean;
+        visualizationType: number;
+        renderer: Renderer;
         private interval;
         private defaultDelay;
         /**
          * Constructor
          */
-        constructor(urlDevices: string, urlData: string, delay: number);
+        constructor(urlDevices: string, urlData: string, delay: number, visualizationType: number);
         /**
-         * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements
+         * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements.
+         * Idem pour les Interfaces.
+         * Indexe le tableau interfaceMetrics[deviceName@ifaceName]
          */
         reloadDevices(): Monitor;
         /**
@@ -56,14 +62,14 @@ declare module BW3D {
         private _unregisterDataDownload;
         /**
          * Calcule les vitesses à partir des données de mesure passées.
+         * et les objets Metrics de chaque instance d'Interface
          * @param data
          */
         computeMetrics(data: any[]): Monitor;
         /**
          * Crée un objet Renderer et lance la visualisation du type choisi.
-         * @param type
          */
-        visualize(type: number): Monitor;
+        visualize(): Monitor;
     }
     /**
      * Metrics : mesure de bande passante

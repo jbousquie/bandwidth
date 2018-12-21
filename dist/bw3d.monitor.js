@@ -34,56 +34,68 @@ var BW3D;
         /**
          * Constructor
          */
-        constructor(urlDevices, urlData, delay) {
+        constructor(urlDevices, urlData, delay, visualizationType) {
+            this.isReady = false; // le monitor a-t-il chargé la configuration des équipements ?
+            this.visualizationType = 0; // type de visualisation demandé
+            this.defaultDelay = 15000; // délai par défaut
             this.urlDevices = urlDevices;
             this.urlData = urlData;
             this.delay = (delay) ? delay : this.defaultDelay;
+            this.visualizationType = (visualizationType === undefined) ? 0 : visualizationType;
             this.devices = {}; // tableau associatif des devices indexés par leur nom
             this.interfaceData = {}; // tableau associatifs des données indexées par les noms d'interface
+            this.interfaceMetrics = {}; // tableau associatifs des objets Interface indexé par le nom deviceName@ifaceName
             this.reloadDevices(); // récupération initiale des informations sur les équipements à monitorer
             this._registerDataDownload(); // enregistrement de la récupération des données de mesure à intervalle régulier
             this.reloadData(); // récupération initiale immédiate des premières données
         }
         /**
-         * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements
+         * Charge ou met à jour les Devices à monitorer depuis le fichier json de description des équipements.
+         * Idem pour les Interfaces.
+         * Indexe le tableau interfaceMetrics[deviceName@ifaceName]
          */
         reloadDevices() {
             // récupération initiale du fichier de descriptions des équipements
             const that = this;
             const xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlDevices);
-            xhr.addEventListener('readystatechange', function () {
-                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    const loadedDevices = JSON.parse(xhr.responseText);
-                    for (let d = 0; d < loadedDevices.length; d++) {
-                        let loadedDevice = loadedDevices[d];
-                        const monitoredDevice = that.devices[loadedDevice.name];
-                        var device;
-                        if (monitoredDevice) {
-                            device = monitoredDevice;
-                        }
-                        else {
-                            device = new Device(loadedDevice.name);
-                            that.devices[loadedDevice.name] = device;
-                        }
-                        device.ip = loadedDevice.ip;
-                        device.snmpCommunity = loadedDevice.community;
-                        device.snmpVersion = loadedDevice.version;
-                        device.description = loadedDevice.description;
-                        device.position = loadedDevice.coordinates;
-                        device.interfaces = [];
-                        let loadedInterfaces = loadedDevice.interfaces;
-                        if (loadedInterfaces) {
-                            for (let n in loadedInterfaces) {
-                                const iface = new Interface(n);
-                                iface.link = loadedInterfaces[n];
-                                iface.metricsLog = [];
-                                device.addInterface(iface);
-                            }
+            xhr.onload = function () {
+                const loadedDevices = JSON.parse(xhr.responseText);
+                for (let d = 0; d < loadedDevices.length; d++) {
+                    let loadedDevice = loadedDevices[d];
+                    const monitoredDevice = that.devices[loadedDevice.name];
+                    var device;
+                    if (monitoredDevice) {
+                        device = monitoredDevice;
+                    }
+                    else {
+                        device = new Device(loadedDevice.name);
+                        that.devices[loadedDevice.name] = device;
+                    }
+                    device.ip = loadedDevice.ip;
+                    device.snmpCommunity = loadedDevice.community;
+                    device.snmpVersion = loadedDevice.version;
+                    device.description = loadedDevice.description;
+                    device.position = loadedDevice.coordinates;
+                    device.interfaces = {};
+                    let loadedInterfaces = loadedDevice.interfaces;
+                    if (loadedInterfaces) {
+                        for (let n in loadedInterfaces) {
+                            const iface = new Interface(n);
+                            iface.link = loadedInterfaces[n];
+                            iface.metricsLog = [];
+                            device.addInterface(iface);
+                            let ifaceMetricName = loadedDevice.name + '@' + n;
+                            that.interfaceMetrics[ifaceMetricName] = iface;
                         }
                     }
                 }
-            });
+                // si le renderer n'est pas déjà démarré, on le lance
+                if (!that.isReady) {
+                    that.visualize();
+                    that.isReady = true;
+                }
+            };
             xhr.send();
             return this;
         }
@@ -95,14 +107,12 @@ var BW3D;
             const that = this;
             const xhr = new XMLHttpRequest();
             xhr.open('GET', this.urlData);
-            xhr.addEventListener('readystatechange', function () {
-                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    const data = JSON.parse(xhr.responseText);
-                    if (data && data.length != 0) {
-                        that.computeMetrics(data);
-                    }
+            xhr.onload = function () {
+                const data = JSON.parse(xhr.responseText);
+                if (data && data.length != 0) {
+                    that.computeMetrics(data);
                 }
-            });
+            };
             xhr.send();
         }
         _registerDataDownload() {
@@ -120,6 +130,7 @@ var BW3D;
         }
         /**
          * Calcule les vitesses à partir des données de mesure passées.
+         * et les objets Metrics de chaque instance d'Interface
          * @param data
          */
         computeMetrics(data) {
@@ -145,6 +156,10 @@ var BW3D;
             // boucle sur les données par interface et calcul des vitesses
             // il faut au moins deux mesures consécutives pour calculer une vitesse
             for (let n in interfaceData) {
+                // on sort si le Monitor n'est pas encore prêt
+                if (!this.isReady) {
+                    return this;
+                }
                 // récupération des objets device, interface et metrics
                 const split = n.split("@");
                 const deviceName = split[0];
@@ -181,14 +196,18 @@ var BW3D;
                 }
                 iface.description = ifDataArray[ifDataArray.length - 1].description;
             }
+            // Si un renderer est attaché au Monitor, on lui notifie la fin du calcul
+            if (this.renderer) {
+                this.renderer.notify("metrics");
+            }
             return this;
         }
         /**
          * Crée un objet Renderer et lance la visualisation du type choisi.
-         * @param type
          */
-        visualize(type) {
-            const renderer = new BW3D.Renderer(this, type);
+        visualize() {
+            const renderer = new BW3D.Renderer(this, this.visualizationType);
+            this.renderer = renderer;
             renderer.start();
             return this;
         }
@@ -210,8 +229,7 @@ const init = function () {
     const urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
     const urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'; // url des données des équipements
     const type = BW3D.Renderer.HeartBeat;
-    // Création du Monitor de données, puis du Gestionnaire de rendu
-    const monitor = new BW3D.Monitor(urlDevices, urlData, delay);
-    monitor.visualize(type);
+    // Création du Monitor de données
+    const monitor = new BW3D.Monitor(urlDevices, urlData, delay, type);
 };
 //# sourceMappingURL=bw3d.monitor.js.map
