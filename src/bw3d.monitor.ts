@@ -133,8 +133,9 @@ module BW3D {
          */
         public reloadData() {
             const that = this;
+            const url = this.urlData + "?" + Date.now();
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', this.urlData);
+            xhr.open('GET', url);
             xhr.onload = function(){
                 const data = JSON.parse(xhr.responseText);
                 if (data && data.length != 0) {
@@ -280,8 +281,8 @@ module BW3D {
 const init =  function() {
     // paramètres (à déporter ultérieurement dans la conf)
     const delay = 3000;     // délai de rafraichissement des données en ms
-    const urlData = 'http://localhost/BJS/bandwidth/bw3d.data.json'; // url des données de mesure
-    const urlDevices = 'http://localhost/BJS/bandwidth/bw3d.devices.json'  // url des données des équipements
+    const urlData = 'bw3d.data.json'; // url des données de mesure
+    const urlDevices = 'bw3d.devices.json'  // url des données des équipements
 
     const type = BW3D.Renderer.HeartBeat;
 

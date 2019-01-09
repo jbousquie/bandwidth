@@ -222,7 +222,9 @@ do
     done
 
     # taille du fichier résultats à $nbLignes
-    tail -n $nbLignes res.raw | tee res.raw > /dev/null
+    # tail -n $nbLignes res.raw | tee res.raw > /dev/null
+    tail -n $nbLignes res.raw > tmp
+    cat tmp > res.raw
 
     # formatage du résultat JSON
     # http://support.gnip.com/articles/data-and-rule-management-with-jq.html
