@@ -40,13 +40,13 @@ module BW3D {
 
             // scene
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color4(0.4, 0.5, 0.8);
+            scene.clearColor = new BABYLON.Color4(0.4, 0.5, 1.0, 1.0);
 
-            // camera et lumière
-            const camera = new BABYLON.ArcRotateCamera("cam", 0, 0, 10, BABYLON.Vector3.Zero(), scene);
+            // camera et lumière  
+            const helper = scene.createDefaultEnvironment({createSkybox: false});
+            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI * 0.5, Math.PI * 0.5, 20, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas);
-            camera.setPosition(new BABYLON.Vector3(0, 0, -20));
-            new BABYLON.PointLight("pl", camera.position, scene);
+            const pl = new BABYLON.PointLight("pl", camera.position, scene);
 
             // Creation du SPS pour le rendu des métriques des interfaces
             const sps = new BABYLON.SolidParticleSystem("sps", scene);
@@ -70,6 +70,7 @@ module BW3D {
 
             // Placement des devices et des interfaces
             let p = 0;
+            let minY = 0;
             for (let d in devices) {
                 let dev = devices[d];
                 let b = BABYLON.MeshBuilder.CreateBox("box-" + d, {}, scene);
@@ -81,6 +82,9 @@ module BW3D {
                 }
                 else {
                     // faire un traitement de placement automatique
+                }
+                if (b.position.y < minY) {
+                    minY = b.position.y;
                 }
 
                 let ifaces = dev.interfaces;
@@ -116,6 +120,12 @@ module BW3D {
                 }
             }
 
+            // placement du ground
+            
+            helper.ground.position.y = minY - 10.0;
+            helper.ground.freezeWorldMatrix();
+            
+
             // GUI : textes des devices et interfaces
             for (let name  in  devicesLR) {
                 let devLR = devicesLR[name];
@@ -132,6 +142,8 @@ module BW3D {
                 textDeviceName.fontSize = 250;
                 textDeviceName.text = dev.displayName;
                 textDeviceName.color = "white";
+                textDeviceName.outlineWidth = 8;
+                textDeviceName.outlineColor = "black";
                 panelGlobal.addControl(textDeviceName);
                 // nom des interfaces
                 let ifaces = dev.interfaces;
@@ -149,8 +161,11 @@ module BW3D {
                         lib = n.substr(index + 1);
                     }
                     textIfaceName.text = lib;
-                    textIfaceName.color = "DarkBlue";
+                    //textIfaceName.color = "DarkBlue";
+                    textIfaceName.color = "white";
                     panelIfaceNames.addControl(textIfaceName);
+                    textIfaceName.outlineWidth = 8;
+                    textIfaceName.outlineColor = "black";
                 }
                 panelIfaceNames.height = "256px";
                 panelGlobal.addControl(panelIfaceNames);
