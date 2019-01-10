@@ -71,11 +71,11 @@ var BW3D;
                 let halfSize = size * 0.5;
                 b.scaling.x = size;
                 gp.position.z = -0.6;
-                gp.position.y = 2.0;
+                gp.position.y = 1.5;
                 gp.scaling.y = 2.0;
                 b.freezeWorldMatrix();
                 gp.freezeWorldMatrix();
-                let count = 0;
+                let count = 0; // compteur d'interfaces
                 for (let i in ifaces) {
                     let sname = d + "@" + i;
                     let sIn = sps.particles[p];
@@ -93,20 +93,44 @@ var BW3D;
                     p++;
                 }
             }
-            // GUI
+            // GUI : textes des devices et interfaces
             for (let name in devicesLR) {
                 let devLR = devicesLR[name];
                 let g = devLR.gui;
+                let dev = devLR.device;
                 let xPixels = Math.ceil(devLR.mesh.scaling.x * 256);
-                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 1024);
-                let panelDeviceName = new BABYLON.GUI.StackPanel();
-                advandedTexture.addControl(panelDeviceName);
+                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 768);
+                // nom du device
+                let panelGlobal = new BABYLON.GUI.StackPanel();
+                advandedTexture.addControl(panelGlobal);
                 let textDeviceName = new BABYLON.GUI.TextBlock();
-                textDeviceName.resizeToFit = true;
+                //textDeviceName.resizeToFit = true;
+                textDeviceName.height = "512px";
                 textDeviceName.fontSize = 250;
-                textDeviceName.text = devLR.device.displayName;
+                textDeviceName.text = dev.displayName;
                 textDeviceName.color = "white";
-                panelDeviceName.addControl(textDeviceName);
+                panelGlobal.addControl(textDeviceName);
+                // nom des interfaces
+                let ifaces = dev.interfaces;
+                let panelIfaceNames = new BABYLON.GUI.StackPanel();
+                panelIfaceNames.isVertical = false;
+                for (let n in ifaces) {
+                    let textIfaceName = new BABYLON.GUI.TextBlock();
+                    //textIfaceName.resizeToFit = true;  
+                    let w = Math.ceil(xPixels / dev.interfaceNumber);
+                    textIfaceName.width = String(w) + "px";
+                    textIfaceName.fontSize = 100;
+                    let index = n.lastIndexOf("/");
+                    let lib = n;
+                    if (index != -1) {
+                        lib = n.substr(index + 1);
+                    }
+                    textIfaceName.text = lib;
+                    textIfaceName.color = "DarkBlue";
+                    panelIfaceNames.addControl(textIfaceName);
+                }
+                panelIfaceNames.height = "256px";
+                panelGlobal.addControl(panelIfaceNames);
             }
             // animation
             var k = 0.0;

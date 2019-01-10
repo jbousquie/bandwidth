@@ -8,6 +8,7 @@ declare module BW3D {
         snmpVersion: string;
         position: number[];
         interfaces: {};
+        interfaceNumber: number;
         /**
          * Constructor
          */

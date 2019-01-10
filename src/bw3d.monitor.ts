@@ -8,6 +8,7 @@ module BW3D {
         public snmpVersion: string;
         public position: number[];
         public interfaces: {};
+        public interfaceNumber: number = 0;
 
         /**
          * Constructor
@@ -109,6 +110,7 @@ module BW3D {
                     device.interfaces = {};
                     let loadedInterfaces = loadedDevice.interfaces;
                     if (loadedInterfaces) {
+                        let count = 0;
                         for (let n in loadedInterfaces) {
                             const iface = new Interface(n);
                             iface.link = loadedInterfaces[n];
@@ -117,7 +119,9 @@ module BW3D {
                             
                             let ifaceMetricName = loadedDevice.name + '@' + n;
                             that.interfaceMetrics[ifaceMetricName] = iface;
+                            count++;
                         }
+                        device.interfaceNumber = count;
                     }
                 }
                 // si le renderer n'est pas déjà démarré, on le lance

@@ -5,6 +5,7 @@ var BW3D;
          * Constructor
          */
         constructor(name) {
+            this.interfaceNumber = 0;
             this.name = name;
         }
         /**
@@ -82,6 +83,7 @@ var BW3D;
                     device.interfaces = {};
                     let loadedInterfaces = loadedDevice.interfaces;
                     if (loadedInterfaces) {
+                        let count = 0;
                         for (let n in loadedInterfaces) {
                             const iface = new Interface(n);
                             iface.link = loadedInterfaces[n];
@@ -89,7 +91,9 @@ var BW3D;
                             device.addInterface(iface);
                             let ifaceMetricName = loadedDevice.name + '@' + n;
                             that.interfaceMetrics[ifaceMetricName] = iface;
+                            count++;
                         }
+                        device.interfaceNumber = count;
                     }
                 }
                 // si le renderer n'est pas déjà démarré, on le lance
