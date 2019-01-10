@@ -3,9 +3,10 @@
         "name": "rtr-central",
         "ip": "192.168.0.100",
         "description": "routeur central",
+        "displayName": "rtr central",
         "community": "comcacti",
         "version": "2c",
-        "coordinates": [0, 5, 0],
+        "coordinates": [-5, 2, 0],
         "interfaces": {
             "Gi1/0/22": "truc",
             "Gi1/0/25": "bidule",
@@ -18,9 +19,10 @@
     {
         "name": "swi-baie-serveur",
         "ip": "192.168.0.101",
+        "displayName": "baie salle serv",
         "community": "comcacti",
         "version": "2c",
-        "coordinates": [150, 0, 80],
+        "coordinates": [5, -2, 0],
         "interfaces": { 
             "Gi0/11": "swi-baie-3-3",
             "Gi0/15": "swi-ndv",

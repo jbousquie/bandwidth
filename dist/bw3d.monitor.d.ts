@@ -1,6 +1,7 @@
 declare module BW3D {
     class Device {
         name: string;
+        displayName: string;
         description: string;
         ip: string;
         snmpCommunity: string;

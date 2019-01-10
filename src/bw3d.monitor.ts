@@ -1,6 +1,7 @@
 module BW3D {
     export class Device {
         public name: string;
+        public displayName: string;
         public description: string;
         public ip: string;
         public snmpCommunity: string;
@@ -84,7 +85,8 @@ module BW3D {
             // récupération initiale du fichier de descriptions des équipements
             const that = this;
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', this.urlDevices);
+            const url = this.urlDevices + "?" + Date.now();
+            xhr.open('GET', url);
             xhr.onload = function(){
                 const loadedDevices = JSON.parse(xhr.responseText);
                 for (let d = 0; d < loadedDevices.length; d++) { 
@@ -102,6 +104,7 @@ module BW3D {
                     device.snmpCommunity = loadedDevice.community;
                     device.snmpVersion = loadedDevice.version;
                     device.description = loadedDevice.description;
+                    device.displayName = (loadedDevice.displayName) ? loadedDevice.displayName : device.name;
                     device.position = loadedDevice.coordinates;
                     device.interfaces = {};
                     let loadedInterfaces = loadedDevice.interfaces;
@@ -284,7 +287,19 @@ const init =  function() {
     const urlData = 'bw3d.data.json'; // url des données de mesure
     const urlDevices = 'bw3d.devices.json'  // url des données des équipements
 
-    const type = BW3D.Renderer.HeartBeat;
+    const types = [
+        BW3D.Renderer.HeartBeat,
+        // mettre ici les autres types de rendus possibles
+
+
+    ];
+
+    let type = types[0];
+    const param = parseInt(document.location.search.substring(1));
+    if (!isNaN(param) && param < types.length) {
+        type = types[param];
+    }
+   
 
     // Création du Monitor de données
     const monitor = new BW3D.Monitor(urlDevices, urlData, delay, type);

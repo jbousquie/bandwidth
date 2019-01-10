@@ -69,5 +69,8 @@ module BW3D {
             }
             return this;
         }
+
+        // Fonctions communes à tous les types de rendus
+        // ...
     }
 }

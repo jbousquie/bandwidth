@@ -1,5 +1,15 @@
 var BW3D;
 (function (BW3D) {
+    // objet d'association Device logique/mesh
+    class DeviceLogicalRender {
+        constructor(device, mesh, gui) {
+            this.device = device;
+            this.mesh = mesh;
+            this.gui = gui;
+        }
+    }
+    BW3D.DeviceLogicalRender = DeviceLogicalRender;
+    ;
     class HeartBeat {
         constructor(renderer) {
             this.renderer = renderer;
@@ -7,19 +17,23 @@ var BW3D;
             this.canvas = renderer.canvas;
             this.devices = renderer.devices;
             this.interfaceMetrics = renderer.interfaceMetrics;
-            this.ifaces3d = {};
+            this.ifaces3d = {}; // tableau associatif ifaces3d["deviceName@ifaceName"] = particleIdx idx de la particle IN, la particle OUT sera à pIdx + nb
+            this.devicesLR = {}; // tableau associatif Logical/Render devicesLR[devName] = {device: devObj, mesh: BJS.Mesh, guiPlane: BJS.GUI}
             const devices = this.devices;
             const canvas = this.canvas;
             const engine = this.engine;
             const ifaces3d = this.ifaces3d;
             const interfaceMetrics = this.interfaceMetrics;
+            const devicesLR = this.devicesLR;
+            // scene
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0.4, 0.5, 0.8);
+            // camera et lumière
             const camera = new BABYLON.ArcRotateCamera("cam", 0, 0, 10, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas);
             camera.setPosition(new BABYLON.Vector3(0, 0, -20));
-            const pl = new BABYLON.PointLight("pl", camera.position, scene);
-            // Creation du SPS pour le rendu des interfaces
+            new BABYLON.PointLight("pl", camera.position, scene);
+            // Creation du SPS pour le rendu des métriques des interfaces
             const sps = new BABYLON.SolidParticleSystem("sps", scene);
             const radius = 0.4;
             const ico = BABYLON.MeshBuilder.CreateIcoSphere("ico", { radius: radius, subdivisions: 3 }, scene);
@@ -32,18 +46,22 @@ var BW3D;
                 }
             }
             sps.addShape(ico, nb * 2); // x2 : un IN et un OUT par interface
+            ico.dispose();
             sps.buildMesh();
             sps.computeParticleTexture = false;
             sps.computeParticleRotation = false;
             sps.isAlwaysVisible = true;
-            ico.dispose();
+            sps.mesh.freezeWorldMatrix();
             // Placement des devices et des interfaces
             let p = 0;
             for (let d in devices) {
                 let dev = devices[d];
-                let b = BABYLON.MeshBuilder.CreateBox(d, {}, scene);
+                let b = BABYLON.MeshBuilder.CreateBox("box-" + d, {}, scene);
+                let gp = BABYLON.MeshBuilder.CreatePlane(d, {}, scene); // le nom du mesh guiPlane est identique à celui de l'objet device
                 if (dev.position) {
                     b.position.copyFromFloats(dev.position[0], dev.position[1], dev.position[2]);
+                    gp.parent = b;
+                    devicesLR[d] = new DeviceLogicalRender(dev, b, gp);
                 }
                 else {
                     // faire un traitement de placement automatique
@@ -52,6 +70,11 @@ var BW3D;
                 let size = Object.keys(ifaces).length;
                 let halfSize = size * 0.5;
                 b.scaling.x = size;
+                gp.position.z = -0.6;
+                gp.position.y = 2.0;
+                gp.scaling.y = 2.0;
+                b.freezeWorldMatrix();
+                gp.freezeWorldMatrix();
                 let count = 0;
                 for (let i in ifaces) {
                     let sname = d + "@" + i;
@@ -70,6 +93,22 @@ var BW3D;
                     p++;
                 }
             }
+            // GUI
+            for (let name in devicesLR) {
+                let devLR = devicesLR[name];
+                let g = devLR.gui;
+                let xPixels = Math.ceil(devLR.mesh.scaling.x * 256);
+                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 1024);
+                let panelDeviceName = new BABYLON.GUI.StackPanel();
+                advandedTexture.addControl(panelDeviceName);
+                let textDeviceName = new BABYLON.GUI.TextBlock();
+                textDeviceName.resizeToFit = true;
+                textDeviceName.fontSize = 250;
+                textDeviceName.text = devLR.device.displayName;
+                textDeviceName.color = "white";
+                panelDeviceName.addControl(textDeviceName);
+            }
+            // animation
             var k = 0.0;
             var prevT = Date.now();
             var curT = prevT;
