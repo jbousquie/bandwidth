@@ -148,21 +148,28 @@ var BW3D;
             var k = 0.0;
             var prevT = Date.now();
             var curT = prevT;
+            var minScale = 0.1;
             scene.onBeforeRenderObservable.add(function () {
                 for (let i in interfaceMetrics) {
                     let iface = interfaceMetrics[i];
                     let p = ifaces3d[i];
                     let iface3dIn = sps.particles[p];
                     let iface3dOut = sps.particles[p + nb];
-                    let sIn = 0.1;
+                    let sIn = 0.05;
                     let sOut = sIn;
                     if (renderer.updatedMetrics && iface.metrics) {
                         //renderer.updatedMetrics = false;
-                        sIn = Math.log(iface.metrics.speedIn) * 0.1;
-                        sOut = Math.log(iface.metrics.speedOut) * 0.1;
+                        sIn = Math.log10(iface.metrics.rateIn * 100000.0 + 1.0) * 0.2;
+                        sOut = Math.log10(iface.metrics.rateOut * 100000.0 + 1.0) * 0.2;
                     }
                     let sclIn = (0.1 + (Math.cos(k * sIn) + 2. * Math.abs(Math.sin(k * sIn * 0.5))) * 0.5) * sIn;
                     let sclOut = (0.1 + (Math.cos(k * sOut) + 2. * Math.abs(Math.sin(k * sOut * 0.5))) * 0.5) * sOut;
+                    if (sclIn < minScale) {
+                        sclIn = minScale;
+                    }
+                    if (sclOut < minScale) {
+                        sclOut = minScale;
+                    }
                     iface3dIn.scaling.copyFromFloats(sclIn, sclIn, sclIn);
                     iface3dOut.scaling.copyFromFloats(sclOut, sclOut, sclOut);
                 }

@@ -243,7 +243,6 @@ module BW3D {
                     newMetrics.rateIn = speedIn / speedMax;
                     newMetrics.rateOut = speedOut / speedMax;
                     newMetrics.ts = current.ts;
-
                     iface.metrics = newMetrics;
                 }
                 iface.description = ifDataArray[ifDataArray.length - 1].description;
