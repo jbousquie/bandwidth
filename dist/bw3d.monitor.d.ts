@@ -9,6 +9,8 @@ declare module BW3D {
         position: number[];
         interfaces: {};
         interfaceNumber: number;
+        mesh: BABYLON.Mesh;
+        guiMesh: any;
         /**
          * Constructor
          */
@@ -26,6 +28,10 @@ declare module BW3D {
         metrics: Metrics;
         metricsLog: Metrics[];
         link: string;
+        mesh: BABYLON.Mesh;
+        guiMesh: BABYLON.Mesh;
+        gui: any;
+        sps: BABYLON.SolidParticleSystem;
         /**
          * Constructor
          */

@@ -1,15 +1,4 @@
 module BW3D {
-    // objet d'association Device logique/mesh
-    export class DeviceLogicalRender {
-        public device: Device;
-        public mesh: BABYLON.Mesh;
-        public gui: BABYLON.Mesh;
-        constructor(device: Device, mesh: BABYLON.Mesh, gui: BABYLON.Mesh) {
-            this.device = device;
-            this.mesh = mesh;
-            this.gui = gui;
-        }
-    };
 
     export class HeartBeat {
         public scene: BABYLON.Scene;
@@ -20,7 +9,6 @@ module BW3D {
         public interfaceMetrics: {}
         public ifaces3d: {};
         public ifaceMetrics: {};
-        public devicesLR: {};
 
         constructor(renderer: Renderer) {
             this.renderer = renderer;
@@ -29,14 +17,12 @@ module BW3D {
             this.devices = renderer.devices;
             this.interfaceMetrics = renderer.interfaceMetrics;
             this.ifaces3d = {};                 // tableau associatif ifaces3d["deviceName@ifaceName"] = particleIdx idx de la particle IN, la particle OUT sera à pIdx + nb
-            this.devicesLR = {};                // tableau associatif Logical/Render devicesLR[devName] = {device: devObj, mesh: BJS.Mesh, guiPlane: BJS.GUI}
 
             const devices = this.devices;
             const canvas = this.canvas;
             const engine = this.engine;
             const ifaces3d = this.ifaces3d;
             const interfaceMetrics = this.interfaceMetrics;
-            const devicesLR = this.devicesLR;
 
             // scene
             const scene = new BABYLON.Scene(engine);
@@ -57,6 +43,7 @@ module BW3D {
                 let dev = devices[d];
                 let ifaces = dev.interfaces;
                 for (let i in ifaces) {
+                    ifaces[i].sps = sps;
                     nb++;
                 }
             }
@@ -78,7 +65,8 @@ module BW3D {
                 if (dev.position) {
                     b.position.copyFromFloats(dev.position[0], dev.position[1], dev.position[2]);
                     gp.parent = b;
-                    devicesLR[d] = new DeviceLogicalRender(dev, b, gp);
+                    dev.mesh = b;
+                    dev.guiMesh = gp;
                 }
                 else {
                     // faire un traitement de placement automatique
@@ -99,6 +87,9 @@ module BW3D {
 
                 let count = 0;                  // compteur d'interfaces
                 for (let i in ifaces) {
+                    let iface = ifaces[i];
+                    iface.sps = sps;
+                    iface.guiMesh = gp;
                     let sname = d + "@" + i;
                     let sIn = sps.particles[p];
                     let sOut = sps.particles[p + nb];
@@ -121,23 +112,21 @@ module BW3D {
             }
 
             // placement du ground
-            
             helper.ground.position.y = minY - 10.0;
             helper.ground.freezeWorldMatrix();
             
 
             // GUI : textes des devices et interfaces
-            for (let name  in  devicesLR) {
-                let devLR = devicesLR[name];
-                let g = devLR.gui;
-                let dev = devLR.device;
-                let xPixels = Math.ceil(devLR.mesh.scaling.x * 256);
+            for (let name  in  devices) {
+                let dev = devices[name];
+                let g = dev.guiMesh;
+                let mesh = dev.mesh;
+                let xPixels = Math.ceil(mesh.scaling.x * 256);
                 let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 768);
                 // nom du device
                 let panelGlobal = new BABYLON.GUI.StackPanel();
                 advandedTexture.addControl(panelGlobal);
                 let textDeviceName = new BABYLON.GUI.TextBlock();
-                //textDeviceName.resizeToFit = true;
                 textDeviceName.height = "512px";
                 textDeviceName.fontSize = 250;
                 textDeviceName.text = dev.displayName;
@@ -150,8 +139,8 @@ module BW3D {
                 let panelIfaceNames = new BABYLON.GUI.StackPanel();
                 panelIfaceNames.isVertical = false;
                 for (let n in ifaces) {
+                    let iface = ifaces[n];
                     let textIfaceName = new BABYLON.GUI.TextBlock();
-                    //textIfaceName.resizeToFit = true;  
                     let w = Math.ceil(xPixels / dev.interfaceNumber);
                     textIfaceName.width = String(w) + "px";                 
                     textIfaceName.fontSize = 100;
@@ -161,17 +150,16 @@ module BW3D {
                         lib = n.substr(index + 1);
                     }
                     textIfaceName.text = lib;
-                    //textIfaceName.color = "DarkBlue";
-                    textIfaceName.color = "white";
+                    textIfaceName.color = "rgb(255, 255, 255)";
                     panelIfaceNames.addControl(textIfaceName);
                     textIfaceName.outlineWidth = 8;
                     textIfaceName.outlineColor = "black";
+                    iface.gui = textIfaceName;
                 }
                 panelIfaceNames.height = "256px";
                 panelGlobal.addControl(panelIfaceNames);
 
             }
-            
             
 
             // animation
@@ -181,17 +169,26 @@ module BW3D {
             var minScale = 0.1;
             scene.onBeforeRenderObservable.add(function() {
 
+                let updatedMetrics = renderer.updatedMetrics;
                 for (let i in interfaceMetrics) {
-                    let iface = interfaceMetrics[i];
-                    let p = ifaces3d[i];
-                    let iface3dIn = sps.particles[p];
-                    let iface3dOut = sps.particles[p + nb];
+                    let ifaceMetric = interfaceMetrics[i];
+                    let p = ifaces3d[i];                    // index de la particule
+                    let iface3dIn = sps.particles[p];       // particule In
+                    let iface3dOut = sps.particles[p + nb]; // particule Out
                     let sIn = 0.05;
                     let sOut = sIn;
-                    if (renderer.updatedMetrics && iface.metrics) {
-                        //renderer.updatedMetrics = false;
-                        sIn = Math.log10(iface.metrics.rateIn * 100000.0 + 1.0) * 0.2;
-                        sOut = Math.log10(iface.metrics.rateOut * 100000.0 + 1.0) * 0.2;
+                    let mIn = 0.0;
+                    let mOut = 0.0;
+                    let m = ifaceMetric.metrics;
+
+                    // scaling des particules
+                    if (m) {
+                        mIn = m.rateIn;
+                        mOut = m.rateOut;
+                        let percentIn = mIn * 100.0;
+                        let percentOut = mOut * 100.0;
+                        sIn = Math.log10(percentIn * 1000.0 + 1.0) * 0.2;
+                        sOut = Math.log10(percentOut * 1000.0 + 1.0) * 0.2;
                     }     
                     let sclIn = (0.1 + ( Math.cos(k * sIn) + 2. * Math.abs( Math.sin(k * sIn * 0.5))) * 0.5) * sIn;
                     let sclOut = (0.1 + ( Math.cos(k * sOut) + 2. * Math.abs( Math.sin(k * sOut * 0.5))) * 0.5) * sOut;
@@ -203,12 +200,30 @@ module BW3D {
                     }
                     iface3dIn.scaling.copyFromFloats(sclIn, sclIn, sclIn);
                     iface3dOut.scaling.copyFromFloats(sclOut, sclOut, sclOut);
+
+                    // coloration du texte des interfaces
+                    if (updatedMetrics && m) {
+                        let max = (mIn > mOut) ? mIn : mOut;
+                        let rgbString;
+                        if (max == 0) {
+                            rgbString = "rgb(0, 0, 0)";
+                        }
+                        else {
+                            let level = 255 - Math.floor(255.0 * max);
+                            rgbString = "rgb(255, " + level + ", " + level + ")";
+                        }
+                        let iface = interfaceMetrics[i];
+                        let text = iface.gui;
+                        text.color = rgbString;
+                    }
                 }
                 sps.setParticles();
                 curT = Date.now();
                 let deltaT = (curT - prevT) * 0.01;
                 k += deltaT;
                 prevT = curT;
+                renderer.updatedMetrics = false;
+
             });
 
             this.scene = scene;

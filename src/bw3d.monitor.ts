@@ -9,6 +9,8 @@ module BW3D {
         public position: number[];
         public interfaces: {};
         public interfaceNumber: number = 0;
+        public mesh: BABYLON.Mesh;
+        public guiMesh: any;
 
         /**
          * Constructor
@@ -35,6 +37,10 @@ module BW3D {
         public metrics: Metrics;
         public metricsLog: Metrics[];
         public link: string;
+        public mesh: BABYLON.Mesh;
+        public guiMesh: BABYLON.Mesh;
+        public gui: any;
+        public sps: BABYLON.SolidParticleSystem;
 
         /**
          * Constructor
@@ -52,7 +58,7 @@ module BW3D {
         public urlDevices: string;              // URL de la conf des équipements
         public urlData: string;                 // URL des data
         public interfaceData: {};               // Annuaire des données collectées par interface
-        public interfaceMetrics: {};            // Annuaire des métriques calculés par interface
+        public interfaceMetrics: {};            // Annuaire des interfaces et de leurs métriques
         public delay: number;                   // délai de récupération des data
         public isReady: boolean = false;        // le monitor a-t-il chargé la configuration des équipements ?
         public visualizationType: number = 0;   // type de visualisation demandé
