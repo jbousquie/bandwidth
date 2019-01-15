@@ -27,6 +27,7 @@ declare module BW3D {
         description: string;
         metrics: Metrics;
         metricsLog: Metrics[];
+        metricsLerp: Metrics;
         link: string;
         mesh: BABYLON.Mesh;
         guiMesh: BABYLON.Mesh;
@@ -36,6 +37,12 @@ declare module BW3D {
          * Constructor
          */
         constructor(name: string);
+        /**
+         * Calcule les valeurs interpolées par factor (entre 0 et 1) entre la mesure courante et la précédente.
+         * Met à jour l'objet .metricsLerp avec le résultat de ce calcul
+         * @param factor
+         */
+        updateMetricsLerp(factor: number): Interface;
     }
     /**
      * Monitor : gestionnaire des mesures

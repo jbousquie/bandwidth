@@ -137,11 +137,19 @@ var BW3D;
                 panelGlobal.addControl(panelIfaceNames);
             }
             // animation
+            var t = 0.0;
+            var latency = 1000;
             var k = 0.0;
+            let invLatency = 1.0 / latency;
             var prevT = Date.now();
             var curT = prevT;
             var minScale = 0.1;
             scene.onBeforeRenderObservable.add(function () {
+                t += engine.getDeltaTime();
+                if (t > latency) {
+                    t = 0.0;
+                }
+                let counter = 0;
                 let updatedMetrics = renderer.updatedMetrics;
                 for (let i in interfaceMetrics) {
                     let ifaceMetric = interfaceMetrics[i];
@@ -153,17 +161,23 @@ var BW3D;
                     let mIn = 0.0;
                     let mOut = 0.0;
                     let m = ifaceMetric.metrics;
+                    let logs = ifaceMetric.metricsLog;
+                    let lastMetric = logs[logs.length - 2];
+                    let percentIn = 0.0;
+                    let percentOut = 0.0;
                     // scaling des particules
-                    if (m) {
-                        mIn = m.rateIn;
-                        mOut = m.rateOut;
-                        let percentIn = mIn * 100.0;
-                        let percentOut = mOut * 100.0;
+                    if (m && lastMetric) {
+                        ifaceMetric.updateMetricsLerp(t * invLatency);
+                        let lerp = ifaceMetric.metricsLerp;
+                        mIn = lerp.rateIn;
+                        mOut = lerp.rateOut;
+                        percentIn = mIn * 100.0;
+                        percentOut = mOut * 100.0;
                         sIn = Math.log10(percentIn * 1000.0 + 1.0) * 0.2;
                         sOut = Math.log10(percentOut * 1000.0 + 1.0) * 0.2;
                     }
-                    let sclIn = (0.1 + (Math.cos(k * sIn) + 2. * Math.abs(Math.sin(k * sIn * 0.5))) * 0.5) * sIn;
-                    let sclOut = (0.1 + (Math.cos(k * sOut) + 2. * Math.abs(Math.sin(k * sOut * 0.5))) * 0.5) * sOut;
+                    let sclIn = (Math.cos(k + counter) + 2. * Math.abs(Math.sin(k * 0.5 + counter))) * 0.1 + sIn * 0.2 + minScale;
+                    let sclOut = (Math.cos(k - counter) + 2. * Math.abs(Math.sin(k * 0.5 - counter))) * 0.1 + sOut * 0.2 + minScale;
                     if (sclIn < minScale) {
                         sclIn = minScale;
                     }
@@ -186,14 +200,15 @@ var BW3D;
                         let iface = interfaceMetrics[i];
                         let text = iface.gui;
                         text.color = rgbString;
+                        renderer.updatedMetrics = false;
                     }
+                    counter++;
                 }
                 sps.setParticles();
                 curT = Date.now();
                 let deltaT = (curT - prevT) * 0.01;
                 k += deltaT;
                 prevT = curT;
-                renderer.updatedMetrics = false;
             });
             this.scene = scene;
         }

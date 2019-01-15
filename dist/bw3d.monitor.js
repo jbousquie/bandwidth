@@ -26,6 +26,25 @@ var BW3D;
         constructor(name) {
             this.name = name;
         }
+        /**
+         * Calcule les valeurs interpolées par factor (entre 0 et 1) entre la mesure courante et la précédente.
+         * Met à jour l'objet .metricsLerp avec le résultat de ce calcul
+         * @param factor
+         */
+        updateMetricsLerp(factor) {
+            let m = this.metrics;
+            let p = this.metricsLog[this.metricsLog.length - 2];
+            if (m && p) {
+                let lerp = this.metricsLerp;
+                lerp.speedIn = p.speedIn + (m.speedIn - p.speedIn) * factor;
+                lerp.speedOut = p.speedOut + (m.speedOut - p.speedOut) * factor;
+                lerp.rateIn = p.rateIn + (m.rateIn - p.rateIn) * factor;
+                lerp.rateOut = p.rateOut + (m.rateOut - p.rateOut) * factor;
+                //let delta = m.ts.getTime() - p.ts.getTime();
+                //lerp.ts = new Date(p.ts.getTime() + delta * factor);
+            }
+            return this;
+        }
     }
     BW3D.Interface = Interface;
     /**
@@ -200,6 +219,9 @@ var BW3D;
                     newMetrics.rateOut = speedOut / speedMax;
                     newMetrics.ts = current.ts;
                     iface.metrics = newMetrics;
+                }
+                if (!iface.metricsLerp) {
+                    iface.metricsLerp = new Metrics(iface);
                 }
                 iface.description = ifDataArray[ifDataArray.length - 1].description;
             }

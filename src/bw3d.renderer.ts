@@ -71,6 +71,16 @@ module BW3D {
         }
 
         // Fonctions communes à tous les types de rendus
-        // ...
+        
+        // Retourne la valeur suivante depuis currentValue pour atteindre targetValue à targetDate
+        public timeLerp(currentValue: number, targetValue: number, targetDate: number): number {
+            let val = currentValue;
+            let deltaTime = targetDate - Date.now();
+            let deltaValue = (targetValue - currentValue);
+            if (deltaTime >= 0) {
+                val = val + deltaValue * this.engine.getDeltaTime() / deltaTime;
+            }
+            return val;
+        }
     }
 }

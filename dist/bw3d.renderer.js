@@ -54,6 +54,17 @@ var BW3D;
             }
             return this;
         }
+        // Fonctions communes à tous les types de rendus
+        // Retourne la valeur suivante depuis currentValue pour atteindre targetValue à targetDate
+        timeLerp(currentValue, targetValue, targetDate) {
+            let val = currentValue;
+            let deltaTime = targetDate - Date.now();
+            let deltaValue = (targetValue - currentValue);
+            if (deltaTime >= 0) {
+                val = val + deltaValue * this.engine.getDeltaTime() / deltaTime;
+            }
+            return val;
+        }
     }
     // Types de visualisation possibles
     Renderer.HeartBeat = 0;

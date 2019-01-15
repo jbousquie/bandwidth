@@ -11,5 +11,6 @@ declare module BW3D {
         constructor(monitor: Monitor, type: number);
         start(): Renderer;
         notify(message: string): Renderer;
+        timeLerp(currentValue: number, targetValue: number, targetDate: number): number;
     }
 }

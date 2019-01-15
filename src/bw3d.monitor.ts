@@ -34,8 +34,9 @@ module BW3D {
         public device: Device;
         public name: string;
         public description: string;
-        public metrics: Metrics;
-        public metricsLog: Metrics[];
+        public metrics: Metrics;            // métrique courant de la mesure : dernier métrique
+        public metricsLog: Metrics[];       // tableau de n derniers métriques
+        public metricsLerp: Metrics;        // métrique courant calculé, interpolé entre le dernier et l'avant dernier
         public link: string;
         public mesh: BABYLON.Mesh;
         public guiMesh: BABYLON.Mesh;
@@ -47,6 +48,25 @@ module BW3D {
          */
         constructor(name: string) {
             this.name = name;
+        }
+        /**
+         * Calcule les valeurs interpolées par factor (entre 0 et 1) entre la mesure courante et la précédente.
+         * Met à jour l'objet .metricsLerp avec le résultat de ce calcul
+         * @param factor 
+         */
+        public updateMetricsLerp(factor: number): Interface {
+            let m = this.metrics;
+            let p = this.metricsLog[this.metricsLog.length - 2];
+            if (m && p) {
+                let lerp = this.metricsLerp;
+                lerp.speedIn = p.speedIn + (m.speedIn - p.speedIn) * factor;
+                lerp.speedOut = p.speedOut + (m.speedOut - p.speedOut) * factor;
+                lerp.rateIn = p.rateIn + (m.rateIn - p.rateIn) * factor;
+                lerp.rateOut = p.rateOut + (m.rateOut - p.rateOut) * factor;
+                //let delta = m.ts.getTime() - p.ts.getTime();
+                //lerp.ts = new Date(p.ts.getTime() + delta * factor);
+            }
+            return this;
         }
     }
 
@@ -250,6 +270,9 @@ module BW3D {
                     newMetrics.rateOut = speedOut / speedMax;
                     newMetrics.ts = current.ts;
                     iface.metrics = newMetrics;
+                }
+                if (!iface.metricsLerp) {
+                    iface.metricsLerp = new Metrics(iface);
                 }
                 iface.description = ifDataArray[ifDataArray.length - 1].description;
             }
