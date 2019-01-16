@@ -58,9 +58,11 @@ module BW3D {
             // Placement des devices et des interfaces
             let p = 0;
             let minY = 0;
+            const faceUV = [];
+            faceUV[0] = faceUV[2] = faceUV[3] = faceUV[4] = faceUV[5] = BABYLON.Vector4.Zero();
             for (let d in devices) {
                 let dev = devices[d];
-                let b = BABYLON.MeshBuilder.CreateBox("box-" + d, {}, scene);
+                let b = BABYLON.MeshBuilder.CreateBox("box-" + d, {faceUV: faceUV}, scene);
                 let gp = BABYLON.MeshBuilder.CreatePlane(d, {}, scene);     // le nom du mesh guiPlane est identique à celui de l'objet device
                 if (dev.position) {
                     b.position.copyFromFloats(dev.position[0], dev.position[1], dev.position[2]);
@@ -122,7 +124,15 @@ module BW3D {
                 let g = dev.guiMesh;
                 let mesh = dev.mesh;
                 let xPixels = Math.ceil(mesh.scaling.x * 256);
-                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 768);
+                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 768, false);            // texture : device + metrics
+                let advandedTextureIface = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(dev.mesh, xPixels, 768, false);// texture : interfaces
+                advandedTextureIface.background = "white";
+                let mat = dev.mesh.material;
+                mat.diffuseColor.copyFromFloats(1.0, 1.0, 1.0);
+                mat.diffuseTexture = mat.emissiveTexture;
+                mat.emissiveTexture = null;
+                mat.opacityTexture = null;
+                mat.backFaceCulling = true;
                 // nom du device
                 let panelGlobal = new BABYLON.GUI.StackPanel();
                 advandedTexture.addControl(panelGlobal);
@@ -134,31 +144,49 @@ module BW3D {
                 textDeviceName.outlineWidth = 8;
                 textDeviceName.outlineColor = "black";
                 panelGlobal.addControl(textDeviceName);
-                // nom des interfaces
-                let ifaces = dev.interfaces;
+                // nom des interfaces et valeur des métriques
+                let panelIfaces = new BABYLON.GUI.StackPanel();
+                advandedTextureIface.addControl(panelIfaces);
                 let panelIfaceNames = new BABYLON.GUI.StackPanel();
                 panelIfaceNames.isVertical = false;
+                let panelMetrics = new BABYLON.GUI.StackPanel();
+                panelMetrics.isVertical = false;
+
+                let ifaces = dev.interfaces;
                 for (let n in ifaces) {
                     let iface = ifaces[n];
                     let textIfaceName = new BABYLON.GUI.TextBlock();
+                    let textMetrics = new BABYLON.GUI.TextBlock();
                     let w = Math.ceil(xPixels / dev.interfaceNumber);
                     textIfaceName.width = String(w) + "px";                 
-                    textIfaceName.fontSize = 100;
+                    textIfaceName.fontSize = 120;
+                    textMetrics.width = textIfaceName.width;
+                    textMetrics.height = "768px";
+                    textMetrics.fontSize = 100;
+
                     let index = n.lastIndexOf("/");
                     let lib = n;
                     if (index != -1) {
                         lib = n.substr(index + 1);
                     }
                     textIfaceName.text = lib;
-                    textIfaceName.color = "rgb(255, 255, 255)";
-                    panelIfaceNames.addControl(textIfaceName);
-                    textIfaceName.outlineWidth = 8;
+                    textIfaceName.color = "blue";
+                    textIfaceName.outlineWidth = 6;
                     textIfaceName.outlineColor = "black";
-                    iface.gui = textIfaceName;
-                }
-                panelIfaceNames.height = "256px";
-                panelGlobal.addControl(panelIfaceNames);
+                    textMetrics.text = "00";
+                    textMetrics.color = "white";
+                    textMetrics.outlineWidth = 6;
+                    textMetrics.outlineColor = "black";
 
+                    panelIfaceNames.addControl(textIfaceName);
+                    panelMetrics.addControl(textMetrics);
+
+                    iface.gui = textMetrics;
+                }
+                panelIfaceNames.height = "512px";
+                panelMetrics.height = "256px";
+                panelIfaces.addControl(panelIfaceNames);
+                panelGlobal.addControl(panelMetrics);
             }
             
 
@@ -204,12 +232,12 @@ module BW3D {
                         mOut = lerp.rateOut;
                         percentIn = mIn * 100.0;
                         percentOut = mOut * 100.0;
-                        sIn = Math.log10(percentIn * 1000.0 + 1.0) * 0.2;
-                        sOut = Math.log10(percentOut * 1000.0 + 1.0) * 0.2;
+                        sIn = Math.log10(percentIn * 10000.0 + 1.0) * minScale;
+                        sOut = Math.log10(percentOut * 10000.0 + 1.0) * minScale;
                     }     
 
-                    let sclIn = ( Math.cos(k + counter) + 2. * Math.abs( Math.sin(k * 0.5 + counter))) * 0.1 + sIn * 0.2 + minScale;
-                    let sclOut = ( Math.cos(k - counter) + 2. * Math.abs( Math.sin(k * 0.5 - counter))) * 0.1 + sOut * 0.2 + minScale;
+                    let sclIn = ( Math.cos(k + counter) + 2. * Math.abs( Math.sin(k * 0.5 + counter))) * sIn * 0.1 + sIn * 0.1 + minScale;
+                    let sclOut = ( Math.cos(k - counter) + 2. * Math.abs( Math.sin(k * 0.5 - counter))) * sOut * 0.1 + sOut * 0.1 + minScale;
                     
                     if (sclIn < minScale) {
                         sclIn = minScale;
@@ -224,6 +252,7 @@ module BW3D {
                     // coloration du texte des interfaces
                     if (updatedMetrics && m) {
                         let max = (mIn > mOut) ? mIn : mOut;
+                        let percentMax = max * 100.0;
                         let rgbString: string;
                         if (max == 0) {
                             rgbString = "rgb(0, 0, 0)";
@@ -235,6 +264,11 @@ module BW3D {
                         let iface = interfaceMetrics[i];
                         let text = iface.gui;
                         text.color = rgbString;
+                        let fixed = percentMax.toFixed(1);
+                        if (fixed.length  < 4 ) {
+                            fixed = "0" + fixed;
+                        }
+                        text.text = fixed;
                         renderer.updatedMetrics = false;
                     }
                     counter++;
