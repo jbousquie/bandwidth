@@ -198,6 +198,7 @@ module BW3D {
          */
         public computeMetrics(data: any[]): Monitor {
             const interfaceData = this.interfaceData;
+            const limit32 = 4294967296;                 // limite int 32 bits
 
             // Reset des tableaux des interfaceData
             for (let n in interfaceData) {
@@ -248,6 +249,8 @@ module BW3D {
 
                     let deltaIn = current.in - previous.in;
                     let deltaOut = current.out - previous.out;
+                    deltaIn = (deltaIn < 0) ? deltaIn + limit32 : deltaIn;
+                    deltaOut = (deltaOut < 0) ? deltaOut + limit32 : deltaOut;
                     let deltaTime = current.ts - previous.ts;
                     let speedMax = current.speed;
 
