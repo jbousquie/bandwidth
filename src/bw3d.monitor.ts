@@ -63,8 +63,6 @@ module BW3D {
                 lerp.speedOut = p.speedOut + (m.speedOut - p.speedOut) * factor;
                 lerp.rateIn = p.rateIn + (m.rateIn - p.rateIn) * factor;
                 lerp.rateOut = p.rateOut + (m.rateOut - p.rateOut) * factor;
-                //let delta = m.ts.getTime() - p.ts.getTime();
-                //lerp.ts = new Date(p.ts.getTime() + delta * factor);
             }
             return this;
         }
@@ -188,9 +186,9 @@ module BW3D {
         }
         private _unregisterDataDownload() {
             const that = this;
-            window.onunload = function() {
+            window.addEventListener("unload", function(e) {
                 window.clearInterval(that.interval);
-            };
+            });
         }
         /**
          * Calcule les vitesses à partir des données de mesure passées.

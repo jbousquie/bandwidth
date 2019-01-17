@@ -3,6 +3,7 @@ var BW3D;
     class Renderer {
         constructor(monitor, type) {
             this.updatedMetrics = false;
+            this.ticked = false;
             this.monitor = monitor;
             this.interfaceMetrics = monitor.interfaceMetrics;
             this.devices = monitor.devices;
@@ -64,6 +65,17 @@ var BW3D;
                 val = val + deltaValue * this.engine.getDeltaTime() / deltaTime;
             }
             return val;
+        }
+        // Démarre un ticker avec la période passée qui met simplement à jour this.ticked
+        startTicker(delay) {
+            const that = this;
+            const handler = function () {
+                that.ticked = true;
+            };
+            this.tickerFunction = window.setInterval(handler, delay);
+            window.addEventListener("unload", function (e) {
+                window.clearInterval(that.tickerFunction);
+            });
         }
     }
     // Types de visualisation possibles

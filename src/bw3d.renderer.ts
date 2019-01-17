@@ -7,6 +7,8 @@ module BW3D {
         public devices: {};
         public interfaceMetrics: {}
         public updatedMetrics: boolean = false;
+        public ticked: boolean = false;
+        public tickerFunction: any;
 
         // Types de visualisation possibles
         public static HeartBeat = 0;
@@ -81,6 +83,18 @@ module BW3D {
                 val = val + deltaValue * this.engine.getDeltaTime() / deltaTime;
             }
             return val;
+        }
+
+        // Démarre un ticker avec la période passée qui met simplement à jour this.ticked
+        public startTicker(delay: number) {
+            const that = this;
+            const handler = function() {
+                that.ticked = true;
+            }
+            this.tickerFunction = window.setInterval(handler, delay);
+            window.addEventListener("unload", function(e) {
+                window.clearInterval(that.tickerFunction);
+            });
         }
     }
 }
