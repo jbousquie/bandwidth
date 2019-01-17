@@ -85,6 +85,20 @@ module BW3D {
             return val;
         }
 
+        // Renvoie une string d'un nombre fixé et formaté (fix = nb de décimales) : 00.00 pour fix = 2 par exemple
+        public formatFixed(nb: number, fix: number): string {
+            let formatted = nb.toFixed(fix);
+            if (formatted.length < fix + 3) {
+                formatted = "0" + formatted;
+            }
+            return formatted;
+        }
+        // retourne le maximum de deux valeurs
+        public maximum(val1 : number, val2: number): number {
+            let max = (val2 > val1) ? val2 : val1;
+            return max;
+        }
+        
         // Démarre un ticker avec la période passée qui met simplement à jour this.ticked
         public startTicker(delay: number) {
             const that = this;

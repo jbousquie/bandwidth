@@ -14,6 +14,8 @@ declare module BW3D {
         start(): Renderer;
         notify(message: string): Renderer;
         timeLerp(currentValue: number, targetValue: number, targetDate: number): number;
+        formatFixed(nb: number, fix: number): string;
+        maximum(val1: number, val2: number): number;
         startTicker(delay: number): void;
     }
 }

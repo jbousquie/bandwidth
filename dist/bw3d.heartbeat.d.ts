@@ -12,7 +12,7 @@ declare module BW3D {
         constructor(renderer: Renderer);
         beatScale(time: number, shift: number, scaling: number, minScaling: number, sign: number): number;
         logarize(val: number, factor: number): number;
-        maximum(val1: number, val2: number): number;
+        rgbString(val: number): string;
         createGUI(): void;
         createScene(): BABYLON.Scene;
     }

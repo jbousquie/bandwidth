@@ -40,7 +40,8 @@ module BW3D {
         public link: string;
         public mesh: BABYLON.Mesh;
         public guiMesh: BABYLON.Mesh;
-        public gui: any;
+        public guiIN: any;
+        public guiOUT: any;
         public sps: BABYLON.SolidParticleSystem;
 
         /**

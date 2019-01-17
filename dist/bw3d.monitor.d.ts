@@ -31,7 +31,8 @@ declare module BW3D {
         link: string;
         mesh: BABYLON.Mesh;
         guiMesh: BABYLON.Mesh;
-        gui: any;
+        guiIN: any;
+        guiOUT: any;
         sps: BABYLON.SolidParticleSystem;
         /**
          * Constructor

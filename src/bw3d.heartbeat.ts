@@ -9,7 +9,7 @@ module BW3D {
         public interfaceMetrics: {}
         public ifaces3d: {};
         public ifaceMetrics: {};
-        public tickDuration: number = 500;
+        public tickDuration: number = 600;
 
         constructor(renderer: Renderer) {
             this.renderer = renderer;
@@ -36,10 +36,18 @@ module BW3D {
             let log = Math.log10(val * 10000.0 + 1.0) * factor;
             return log;
         }
-        // retourne le maximum de deux valeurs
-        public maximum(val1 : number, val2: number): number {
-            let max = (val2 > val1) ? val2 : val1;
-            return max;
+
+        // retourne une string rgb allant de blanc à rouge pour val croissant de 0 à 1, noir pour zéro
+        public rgbString(val: number): string {
+            let rgbString;
+            if (val == 0) {
+                rgbString = "rgb(0, 0, 0)";         // texte noir si zero trafic
+            }
+            else {
+                let level = 255 - Math.floor(255.0 * val);
+                rgbString = "rgb(255, " + level + ", " + level + ")";
+            }
+            return rgbString;
         }
 
         // crée tous les panneaux et textures du GUI
@@ -50,8 +58,8 @@ module BW3D {
                 let g = dev.guiMesh;
                 let mesh = dev.mesh;
                 let xPixels = Math.ceil(mesh.scaling.x * 256);
-                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 768, false);            // texture : device + metrics
-                let advandedTextureIface = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(dev.mesh, xPixels, 768, false);// texture : interfaces
+                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 960, false);            // texture : device + metrics
+                let advandedTextureIface = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(dev.mesh, xPixels, 768, false); // texture : interfaces
                 advandedTextureIface.background = "white";
                 let mat = dev.mesh.material;
                 mat.diffuseColor.copyFromFloats(1.0, 1.0, 1.0);
@@ -63,7 +71,7 @@ module BW3D {
                 let panelGlobal = new BABYLON.GUI.StackPanel();         // panel global = nom device + panel mesures, texture du guiPlane
                 advandedTexture.addControl(panelGlobal);
                 let textDeviceName = new BABYLON.GUI.TextBlock();
-                textDeviceName.height = "512px";
+                textDeviceName.height = "256px";
                 textDeviceName.fontSize = 250;
                 textDeviceName.text = dev.displayName;
                 textDeviceName.color = "white";
@@ -75,20 +83,22 @@ module BW3D {
                 advandedTextureIface.addControl(panelIfaces);           
                 let panelIfaceNames = new BABYLON.GUI.StackPanel();
                 panelIfaceNames.isVertical = false;
-                let panelMetrics = new BABYLON.GUI.StackPanel();      // panel des mesures
-                panelMetrics.isVertical = false;
+                let panelMetricsIN = new BABYLON.GUI.StackPanel();      // panel des mesures in
+                let panelMetricsOUT = new BABYLON.GUI.StackPanel();      // panel des mesures out
+                panelMetricsIN.isVertical = false;
+                panelMetricsOUT.isVertical = false;
 
                 let ifaces = dev.interfaces;
                 for (let n in ifaces) {
                     let iface = ifaces[n];
                     let textIfaceName = new BABYLON.GUI.TextBlock();
-                    let textMetrics = new BABYLON.GUI.TextBlock();
+                    let textMetricsIN = new BABYLON.GUI.TextBlock();
+                    let textMetricsOUT = new BABYLON.GUI.TextBlock();
                     let w = Math.ceil(xPixels / dev.interfaceNumber);
                     textIfaceName.width = String(w) + "px";                 
                     textIfaceName.fontSize = 120;
-                    textMetrics.width = textIfaceName.width;
-                    textMetrics.height = "768px";
-                    textMetrics.fontSize = 100;
+                    textMetricsIN.width = textMetricsOUT.width = textIfaceName.width;
+                    textMetricsIN.fontSize = textMetricsOUT.fontSize = 100;
 
                     let index = n.lastIndexOf("/");           // transformation du nom d'interface de "Gi1/0/1" en "1"
                     let lib = n;
@@ -99,20 +109,23 @@ module BW3D {
                     textIfaceName.color = "blue";
                     textIfaceName.outlineWidth = 6;
                     textIfaceName.outlineColor = "black";
-                    textMetrics.text = "00.0";
-                    textMetrics.color = "white";
-                    textMetrics.outlineWidth = 6;
-                    textMetrics.outlineColor = "black";
+                    textMetricsIN.text = textMetricsOUT.text = "00.0";
+                    textMetricsIN.color = textMetricsOUT.color = "white";
+                    textMetricsIN.outlineWidth = textMetricsOUT.outlineWidth = 6;
+                    textMetricsIN.outlineColor = textMetricsOUT.outlineColor = "black";
 
                     panelIfaceNames.addControl(textIfaceName);
-                    panelMetrics.addControl(textMetrics);
+                    panelMetricsIN.addControl(textMetricsIN);
+                    panelMetricsOUT.addControl(textMetricsOUT);
 
-                    iface.gui = textMetrics;
+                    iface.guiIN = textMetricsIN;
+                    iface.guiOUT = textMetricsOUT;
                 }
                 panelIfaceNames.height = "512px";
-                panelMetrics.height = "256px";
+                panelMetricsIN.height = panelMetricsOUT.height = "256px";
                 panelIfaces.addControl(panelIfaceNames);
-                panelGlobal.addControl(panelMetrics);
+                panelGlobal.addControl(panelMetricsIN);
+                panelGlobal.addControl(panelMetricsOUT);
             } 
         };
 
@@ -125,7 +138,7 @@ module BW3D {
             const interfaceMetrics = this.interfaceMetrics;
             const beatScale = this.beatScale;
             const logarize = this.logarize;
-            const maximum = this.maximum;
+            const rgbString = this.rgbString;
 
             // démarrage du ticker
             renderer.startTicker(this.tickDuration);
@@ -188,8 +201,8 @@ module BW3D {
                 let halfSize = size * 0.5;
                 b.scaling.x = size;
                 gp.position.z = -0.6;
-                gp.position.y = 1.5;
-                gp.scaling.y = 2.0;
+                gp.position.y = 0.8;
+                gp.scaling.y = 6.0;
                 b.freezeWorldMatrix();
                 gp.freezeWorldMatrix();
 
@@ -280,24 +293,13 @@ module BW3D {
 
                         // coloration du texte des interfaces
                         if (renderer.ticked) {
-                            let max = maximum(mIn, mOut);
-                            let percentMax = maximum(percentIn, percentOut);
-                            let rgbString: string;
-                            if (max == 0) {
-                                rgbString = "rgb(0, 0, 0)";         // texte noir si zero trafic
-                            }
-                            else {
-                                let level = 255 - Math.floor(255.0 * max);
-                                rgbString = "rgb(255, " + level + ", " + level + ")";
-                            }
                             let iface = interfaceMetrics[i];
-                            let text = iface.gui;
-                            text.color = rgbString;
-                            let fixed = percentMax.toFixed(1);     // formattage numérique 00.0
-                            if (fixed.length  < 4 ) {
-                                fixed = "0" + fixed;
-                            }
-                            text.text = fixed;
+                            let textIn = iface.guiIN;
+                            let textOut = iface.guiOUT;
+                            textIn.color = rgbString(mIn);
+                            textOut.color = rgbString(mOut);
+                            textIn.text = renderer.formatFixed(percentIn, 1);
+                            textOut.text = renderer.formatFixed(percentOut, 1);
                         }
                     }
                     counter++;

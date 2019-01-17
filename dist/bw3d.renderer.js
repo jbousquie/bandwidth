@@ -66,6 +66,19 @@ var BW3D;
             }
             return val;
         }
+        // Renvoie une string d'un nombre fixé et formaté (fix = nb de décimales) : 00.00 pour fix = 2 par exemple
+        formatFixed(nb, fix) {
+            let formatted = nb.toFixed(fix);
+            if (formatted.length < fix + 3) {
+                formatted = "0" + formatted;
+            }
+            return formatted;
+        }
+        // retourne le maximum de deux valeurs
+        maximum(val1, val2) {
+            let max = (val2 > val1) ? val2 : val1;
+            return max;
+        }
         // Démarre un ticker avec la période passée qui met simplement à jour this.ticked
         startTicker(delay) {
             const that = this;
