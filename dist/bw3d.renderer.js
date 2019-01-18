@@ -18,6 +18,10 @@ var BW3D;
                     let hb = new BW3D.HeartBeat(this);
                     scene = hb.scene;
                     break;
+                case Renderer.SphericalHarmonics:
+                    let sh = new BW3D.SphericalHarmonics(this);
+                    scene = sh.scene;
+                    break;
                 default:
                     hb = new BW3D.HeartBeat(this);
                     scene = hb.scene;
@@ -93,6 +97,7 @@ var BW3D;
     }
     // Types de visualisation possibles
     Renderer.HeartBeat = 0;
+    Renderer.SphericalHarmonics = 1;
     BW3D.Renderer = Renderer;
 })(BW3D || (BW3D = {}));
 //# sourceMappingURL=bw3d.renderer.js.map

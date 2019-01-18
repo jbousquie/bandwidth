@@ -12,6 +12,7 @@ module BW3D {
 
         // Types de visualisation possibles
         public static HeartBeat = 0;
+        public static SphericalHarmonics = 1;
 
         constructor(monitor: Monitor, type: number) {
             this.monitor = monitor;
@@ -29,6 +30,10 @@ module BW3D {
                 case Renderer.HeartBeat:
                     let hb = new HeartBeat(this);
                     scene = hb.scene;
+                    break;
+                case Renderer.SphericalHarmonics:
+                    let sh = new SphericalHarmonics(this);
+                    scene = sh.scene;
                     break;
                 default:
                     hb = new HeartBeat(this);

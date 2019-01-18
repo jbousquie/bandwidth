@@ -260,6 +260,8 @@ const init = function () {
     const urlDevices = 'bw3d.devices.json'; // url des données des équipements
     const types = [
         BW3D.Renderer.HeartBeat,
+        BW3D.Renderer.SphericalHarmonics
+        // mettre ici les autres types de rendus possibles
     ];
     let type = types[0];
     const param = parseInt(document.location.search.substring(1));

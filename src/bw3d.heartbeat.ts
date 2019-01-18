@@ -8,7 +8,6 @@ module BW3D {
         public devices: {};
         public interfaceMetrics: {}
         public ifaces3d: {};
-        public ifaceMetrics: {};
         public tickDuration: number = 600;
 
         constructor(renderer: Renderer) {

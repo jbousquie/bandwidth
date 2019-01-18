@@ -10,6 +10,7 @@ declare module BW3D {
         ticked: boolean;
         tickerFunction: any;
         static HeartBeat: number;
+        static SphericalHarmonics: number;
         constructor(monitor: Monitor, type: number);
         start(): Renderer;
         notify(message: string): Renderer;

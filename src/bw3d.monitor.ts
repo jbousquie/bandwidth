@@ -323,6 +323,7 @@ const init =  function() {
 
     const types = [
         BW3D.Renderer.HeartBeat,
+        BW3D.Renderer.SphericalHarmonics
         // mettre ici les autres types de rendus possibles
 
 

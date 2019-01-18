@@ -7,7 +7,6 @@ declare module BW3D {
         devices: {};
         interfaceMetrics: {};
         ifaces3d: {};
-        ifaceMetrics: {};
         tickDuration: number;
         constructor(renderer: Renderer);
         beatScale(time: number, shift: number, scaling: number, minScaling: number, sign: number): number;
