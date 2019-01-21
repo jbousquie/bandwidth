@@ -13,10 +13,10 @@ module BW3D {
         public colors: BABYLON.Color3[];
         public deltaColors: BABYLON.Color3[];
         public m: number[] = [1, 3, 1, 5, 1, 7, 1, 9];
-        public lat: number = 50;
-        public lng: number = 50;
+        public lat: number = 80;
+        public lng: number = 80;
         public steps: number = 20;
-        public tickDuration: number = 6000;
+        public tickDuration: number = 12000;
         public mesh: BABYLON.Mesh;
         public ribbonOptions: any;
         private _morphing: boolean = false;
@@ -153,12 +153,10 @@ module BW3D {
             }
             this._currentStep++;
         }
-
         
 
         public createScene(): BABYLON.Scene {
             const renderer = this.renderer;
-            const devices = this.devices;
             const canvas = this.canvas;
             const engine = this.engine;
             const interfaceMetrics = this.interfaceMetrics;
@@ -168,14 +166,14 @@ module BW3D {
             const beatScale = renderer.beatScale;
             const logarize = renderer.logarize;
     
-            this.steps = Math.floor(delay / 80);
+            this.steps = Math.floor(delay / 40.0);
 
             // Scene
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0, 0, 0.2, 1.0);
             const camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
-            camera.setPosition(new BABYLON.Vector3(0, 0.5, -3));
-            camera.wheelPrecision = 100;
+            camera.setPosition(new BABYLON.Vector3(0, 0.5, -10.0));
+            //camera.wheelPrecision = 100;
             camera.minZ = 0.1;
             camera.attachControl(canvas, true);
         
@@ -217,8 +215,9 @@ module BW3D {
             let invLatency = 1.0 / latency; // inverse de la latence
             let prevT = Date.now();         // date précédente
             let curT = prevT;               // date courante
-            let minScale = 0.1;             // valeur min du scaling du mesh
-            
+            let minScale = 0.75;             // valeur min du scaling du mesh
+            let amplification = 1000.0;
+
             scene.registerBeforeRender(function () {
                 // reset eventuel de t
                 t += engine.getDeltaTime();
@@ -239,15 +238,14 @@ module BW3D {
                 let mIn = 0.0;
                 let percentIn = 0.0;
                 let lgIn = 0.0;
-                let amplification = 1000.0;
 
                 if (m) {
                     ifaceMetric.updateMetricsLerp(t * invLatency);
                     let lerp = ifaceMetric.metricsLerp;
                     mIn = lerp.rateIn;
-                    percentIn = mIn * 100.0;
+                    percentIn = mIn * 10.0;
                     lgIn = logarize(percentIn, amplification, minScale);   
-                    let kf = k * 0.015;
+                    let kf = k * 0.02;
                     let sclIn = beatScale(kf, 0, lgIn, 0.1, minScale, 1.0);
                     let sinScl = sclIn * Math.sin(kf) * percentIn + sclIn
                     mesh.scaling.copyFromFloats(sinScl, sclIn, sinScl);
@@ -262,7 +260,8 @@ module BW3D {
                 let deltaT = (curT - prevT);
                 k += deltaT;
                 prevT = curT;  
-                mesh.rotation.y += 0.001;
+                mesh.rotation.y += 0.005;
+                mesh.rotation.z += 0.001;
             });
              
            return scene;  

@@ -13,6 +13,7 @@ module BW3D {
         // Types de visualisation possibles
         public static HeartBeat = 0;
         public static SphericalHarmonics = 1;
+        public static Boxes = 2;
 
         constructor(monitor: Monitor, type: number) {
             this.monitor = monitor;
@@ -35,6 +36,10 @@ module BW3D {
                     let sh = new SphericalHarmonics(this);
                     scene = sh.scene;
                     break;
+                case Renderer.SphericalHarmonics:
+                    let bx = new Boxes(this);
+                    scene = bx.scene;
+                break;
                 default:
                     hb = new HeartBeat(this);
                     scene = hb.scene;
@@ -78,7 +83,7 @@ module BW3D {
         }
 
         // Fonctions communes à tous les types de rendus
-        
+        // =============================================
         // Retourne la valeur suivante depuis currentValue pour atteindre targetValue à targetDate
         public timeLerp(currentValue: number, targetValue: number, targetDate: number): number {
             let val = currentValue;

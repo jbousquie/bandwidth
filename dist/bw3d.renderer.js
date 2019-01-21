@@ -22,6 +22,10 @@ var BW3D;
                     let sh = new BW3D.SphericalHarmonics(this);
                     scene = sh.scene;
                     break;
+                case Renderer.SphericalHarmonics:
+                    let bx = new BW3D.Boxes(this);
+                    scene = bx.scene;
+                    break;
                 default:
                     hb = new BW3D.HeartBeat(this);
                     scene = hb.scene;
@@ -60,6 +64,7 @@ var BW3D;
             return this;
         }
         // Fonctions communes à tous les types de rendus
+        // =============================================
         // Retourne la valeur suivante depuis currentValue pour atteindre targetValue à targetDate
         timeLerp(currentValue, targetValue, targetDate) {
             let val = currentValue;
@@ -112,6 +117,7 @@ var BW3D;
     // Types de visualisation possibles
     Renderer.HeartBeat = 0;
     Renderer.SphericalHarmonics = 1;
+    Renderer.Boxes = 2;
     BW3D.Renderer = Renderer;
 })(BW3D || (BW3D = {}));
 //# sourceMappingURL=bw3d.renderer.js.map
