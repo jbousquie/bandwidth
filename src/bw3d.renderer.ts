@@ -115,5 +115,19 @@ module BW3D {
                 window.clearInterval(that.tickerFunction);
             });
         }
+
+        // retourne une valeur de scaling sous forme de pulsation en fonction du temps
+        public beatScale(time: number, shift: number, scaling: number, scalingFactor: number, minScaling: number, sign: number): number {
+            let val = ( Math.cos(time + shift * sign) + 2. * Math.abs( Math.sin(time * 0.5 + shift * sign))) * scaling * scalingFactor + scaling * scalingFactor + minScaling;
+            if (val < minScaling) {
+                val = minScaling;
+            }
+            return val;
+        };
+        // retourne un log base 10 positif pour réduire visuellement l'amplitude de la variation 0 à 100de val
+        public logarize(val: number, amplification: number, factor: number): number {
+            let log = Math.log10(val * amplification + 1.0) * factor;
+            return log;
+        }
     }
 }

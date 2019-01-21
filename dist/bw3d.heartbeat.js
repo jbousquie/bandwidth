@@ -12,21 +12,6 @@ var BW3D;
             this.scene = this.createScene();
         }
         ;
-        // retourne une valeur de scaling sous forme de pulsation en fonction du temps
-        beatScale(time, shift, scaling, minScaling, sign) {
-            let k = time * 0.01;
-            let val = (Math.cos(k + shift * sign) + 2. * Math.abs(Math.sin(k * 0.5 + shift * sign))) * scaling * 0.1 + scaling * 0.1 + minScaling;
-            if (val < minScaling) {
-                val = minScaling;
-            }
-            return val;
-        }
-        ;
-        // retourne un log base 10 positif pour réduire visuellement l'amplitude de la variation 0 à 100
-        logarize(val, factor) {
-            let log = Math.log10(val * 10000.0 + 1.0) * factor;
-            return log;
-        }
         // retourne une string rgb allant de blanc à rouge pour val croissant de 0 à 1, noir pour zéro
         rgbString(val) {
             let rgbString;
@@ -121,8 +106,8 @@ var BW3D;
             const engine = this.engine;
             const ifaces3d = this.ifaces3d;
             const interfaceMetrics = this.interfaceMetrics;
-            const beatScale = this.beatScale;
-            const logarize = this.logarize;
+            const beatScale = renderer.beatScale;
+            const logarize = renderer.logarize;
             const rgbString = this.rgbString;
             // démarrage du ticker
             renderer.startTicker(this.tickDuration);
@@ -211,13 +196,13 @@ var BW3D;
             // GUI : textes des devices et interfaces et valeurs des mesures
             this.createGUI();
             // Animation
-            var t = 0.0; // temps écoulé entre deux périodes de latence
-            var latency = 1000; // latence pour passer d'une valeur mesurée à la suivante, en ms
-            var k = 0.0; // mesure du temps en ms
+            let t = 0.0; // temps écoulé entre deux périodes de latence
+            let k = 0.0; // mesure du temps en ms
+            let latency = 1000; // latence pour passer d'une valeur mesurée à la suivante, en ms
             let invLatency = 1.0 / latency; // inverse de la latence
-            var prevT = Date.now(); // date précédente
-            var curT = prevT; // date courante
-            var minScale = 0.1; // valeur min du scaling des particules
+            let prevT = Date.now(); // date précédente
+            let curT = prevT; // date courante
+            let minScale = 0.1; // valeur min du scaling des particules
             scene.onBeforeRenderObservable.add(function () {
                 // reset eventuel de t
                 t += engine.getDeltaTime();
@@ -239,6 +224,7 @@ var BW3D;
                     let lastMetric = logs[logs.length - 2];
                     let percentIn = 0.0; // pourcentage de la mesure IN
                     let percentOut = 0.0; // pourcentage de la mesure OUT
+                    let amplification = 1000.0;
                     if (m && lastMetric) {
                         ifaceMetric.updateMetricsLerp(t * invLatency);
                         let lerp = ifaceMetric.metricsLerp;
@@ -247,10 +233,11 @@ var BW3D;
                         mOut = lerp.rateOut;
                         percentIn = mIn * 100.0;
                         percentOut = mOut * 100.0;
-                        lgIn = logarize(percentIn, minScale);
-                        lgOut = logarize(percentOut, minScale);
-                        let sclIn = beatScale(k, counter, lgIn, minScale, 1.0);
-                        let sclOut = beatScale(k, counter, lgOut, minScale, -1.0);
+                        lgIn = logarize(percentIn, amplification, minScale);
+                        lgOut = logarize(percentOut, amplification, minScale);
+                        let kf = k * 0.01;
+                        let sclIn = beatScale(kf, counter, lgIn, 0.1, minScale, 1.0);
+                        let sclOut = beatScale(kf, counter, lgOut, 0.1, minScale, -1.0);
                         iface3dIn.scaling.copyFromFloats(sclIn, sclIn, sclIn);
                         iface3dOut.scaling.copyFromFloats(sclOut, sclOut, sclOut);
                         // coloration du texte des interfaces

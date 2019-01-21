@@ -16,23 +16,24 @@ declare module BW3D {
         lng: number;
         steps: number;
         tickDuration: number;
+        mesh: BABYLON.Mesh;
+        ribbonOptions: any;
         private _morphing;
         private _currentStep;
-        number: number;
         constructor(renderer: Renderer);
         /**
          * Met à jour les paths selon la fonction harmonique
          */
         computeHarmonics(paths: BABYLON.Vector3[][]): void;
         /**
-         * Génère une nouvelle harmonique sphérique.
+         * Génère une nouvelle harmonique sphérique cible.
          * Met à jour les valeurs cibles, les couleurs cibles et les pas de progression pour atteindre cette nouvelle harmonique.
          */
         generateHarmonics(): void;
         /**
          * Transforme la géométrie et les couleurs du mesh
          */
-        morph(): void;
+        morphRibbon(): void;
         createScene(): BABYLON.Scene;
     }
 }

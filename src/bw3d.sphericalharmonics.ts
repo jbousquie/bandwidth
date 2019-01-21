@@ -15,10 +15,12 @@ module BW3D {
         public m: number[] = [1, 3, 1, 5, 1, 7, 1, 9];
         public lat: number = 50;
         public lng: number = 50;
-        public steps: number;
-        public tickDuration: number = 600;
+        public steps: number = 20;
+        public tickDuration: number = 6000;
+        public mesh: BABYLON.Mesh;
+        public ribbonOptions: any;
         private _morphing: boolean = false;
-        private _currentStep; number = 0;
+        private _currentStep: number = 0;
 
         constructor(renderer: Renderer) {
             this.renderer = renderer;
@@ -38,8 +40,10 @@ module BW3D {
                 new BABYLON.Color3(Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5)
             ];
             this.deltaColors = [BABYLON.Color3.Black(), BABYLON.Color3.Black(), BABYLON.Color3.Black(), BABYLON.Color3.Black(), BABYLON.Color3.Black(), BABYLON.Color3.Black()];
-
             this.scene = this.createScene();
+            
+            // démarrage du ticker
+            renderer.startTicker(this.tickDuration);
         };
 
         /**
@@ -78,7 +82,7 @@ module BW3D {
         };
  
         /**
-         * Génère une nouvelle harmonique sphérique.
+         * Génère une nouvelle harmonique sphérique cible.
          * Met à jour les valeurs cibles, les couleurs cibles et les pas de progression pour atteindre cette nouvelle harmonique.
          */
         public generateHarmonics(): void {
@@ -122,11 +126,10 @@ module BW3D {
         /**
          * Transforme la géométrie et les couleurs du mesh
          */
-        public morph(): void {
+        public morphRibbon(): void {
             if (this._currentStep === this.steps) {
                 this._currentStep = 0;
                 this._morphing = false;
-                //this.paths = targetPaths;
             }
             else {
                 // update paths
@@ -140,7 +143,7 @@ module BW3D {
                         index++;
                     }
                 }
-                BABYLON.Mesh.CreateRibbon(null, paths, null, null, null, scene, null, null, mesh);
+                BABYLON.MeshBuilder.CreateRibbon(null, this.ribbonOptions);
                 // update colors
                 let colors = this.colors;
                 let deltaColors = this.deltaColors;
@@ -151,6 +154,8 @@ module BW3D {
             this._currentStep++;
         }
 
+        
+
         public createScene(): BABYLON.Scene {
             const renderer = this.renderer;
             const devices = this.devices;
@@ -159,27 +164,19 @@ module BW3D {
             const interfaceMetrics = this.interfaceMetrics;
             const delay = this.tickDuration;
             const paths = this.paths;
-            const targetPaths = this.targetPaths;
-            const m = this.m;
-            const deltas = this.deltas;
-            const colors = this.colors;
-            const deltaColors = this.deltaColors;
 
+            const beatScale = renderer.beatScale;
+            const logarize = renderer.logarize;
+    
             this.steps = Math.floor(delay / 80);
-            
-            var morph = false;
-            var counter = 0;
 
-            /*
-            const beatScale = this.beatScale;
-            const logarize = this.logarize;
-            const rgbString = this.rgbString;
-            */
-
+            // Scene
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0, 0, 0.2, 1.0);
-            const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2 - 0.5, 0.5, 6, BABYLON.Vector3.Zero(), scene);
+            const camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(0, 0.5, -3));
             camera.wheelPrecision = 100;
+            camera.minZ = 0.1;
             camera.attachControl(canvas, true);
         
             // procedural fire material
@@ -193,76 +190,81 @@ module BW3D {
             fireMaterial.specularTexture = fireTexture;
             fireMaterial.emissiveTexture = fireTexture;
             fireMaterial.specularPower = 4;
-            fireMaterial.backFaceCulling = false;
             fireTexture.fireColors = this.colors;  
+            fireMaterial.backFaceCulling = false;
       
-           // morphing function : update ribbons with intermediate m values
-           var morphing = function (mesh, m, paths, targetPaths, deltas, deltaColors) {
-               if (counter === this.steps) {
-                   counter = 0;
-                   morph = false;
-                   paths = targetPaths;
-               }
-               else {
-                   // update paths
-                   var index = 0;
-                   for (var p = 0; p < paths.length; p++) {
-                       var path = paths[p];
-                       for (var i = 0; i < path.length; i++) {
-                           path[i] = path[i].add(deltas[index]);
-                           index++;
-                       }
-                   }
-                   mesh = BABYLON.Mesh.CreateRibbon(null, paths, null, null, null, scene, null, null, mesh);
-                   // update colors
-                   for (var c = 0; c < colors.length; c++) {
-                       colors[c] = colors[c].add(deltaColors[c]);
-                   }
-               }
-               counter++;
-               return mesh;
-           };
-       
-           // SH init & ribbon creation
-           //harmonic(m, lat, lng, paths);
+           // Calcul d'une premiere SH et création d'un ribbon sur cette géométrie
            this.computeHarmonics(paths);
-           var mesh = BABYLON.Mesh.CreateRibbon("ribbon", paths, true, false, 0, scene, true);
-           mesh.freezeNormals();
-           mesh.scaling = new BABYLON.Vector3(1, 1, 1);
-           mesh.material = fireMaterial;
+           this.ribbonOptions = {pathArray: this.paths, closeArray: true, sideOrientation: BABYLON.Mesh.BACKSIDE, updatable: true};
+           this.mesh = BABYLON.MeshBuilder.CreateRibbon("ribbon", this.ribbonOptions, scene);
+           this.ribbonOptions.instance = this.mesh;
+           this.mesh.freezeNormals();
+           this.mesh.alwaysSelectAsActiveMesh = true;
+           this.mesh.material = fireMaterial;
+
            // Volumetric Light
-           var volLight = new BABYLON.VolumetricLightScatteringPostProcess("vl", 1.0, camera, mesh, 50, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
+           const volLight = new BABYLON.VolumetricLightScatteringPostProcess("vl", 1.0, camera, this.mesh, 50, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
            volLight.exposure = 0.15;
            volLight.decay = 0.95;
            volLight.weight = 0.5;
-       
-           // interval setting
-           let that = this;
-           var interval = window.setInterval(function () {
-               that.generateHarmonics();
-               mesh = morphing(mesh, m, paths, targetPaths, deltas, deltaColors);
-           }, delay);
-       
-           // immediate first SH
-           this.generateHarmonics();
-       
-           // then animation
-           scene.registerBeforeRender(function () {
-               if (morph) {
-                   mesh = morphing(mesh, m, paths, targetPaths, deltas, deltaColors);
-               }
-               /*
-               rx += deltarx;
-               ry -= deltary;
-               mesh.rotation.y = ry;
-               mesh.rotation.z = rx;
-               */
-           });
-       
-           scene.onDispose = function () {
-               clearInterval(interval);
-           }
-       
+              
+            // Animation
+            let that = this;
+            let mesh = this.mesh;
+            let t = 0.0;                    // temps écoulé entre deux périodes de latence
+            let k = 0.0;                    // mesure du temps en ms
+            let latency = 1000;             // latence pour passer d'une valeur mesurée à la suivante, en ms
+            let invLatency = 1.0 / latency; // inverse de la latence
+            let prevT = Date.now();         // date précédente
+            let curT = prevT;               // date courante
+            let minScale = 0.1;             // valeur min du scaling du mesh
+            
+            scene.registerBeforeRender(function () {
+                // reset eventuel de t
+                t += engine.getDeltaTime();
+                if (t > latency) {
+                    t = 0.0;
+                }
+                if (that._morphing) {       // si morphing en cours non terminé
+                    that.morphRibbon();
+                }
+
+                // scaling du Ribbon en fonction de la mesure
+                let ifaceMetric;
+                for (let i in interfaceMetrics) {
+                    ifaceMetric = interfaceMetrics[i];
+                    break;  // récupération de la première interface uniquement
+                }
+                let m = ifaceMetric.metrics;
+                let mIn = 0.0;
+                let percentIn = 0.0;
+                let lgIn = 0.0;
+                let amplification = 1000.0;
+
+                if (m) {
+                    ifaceMetric.updateMetricsLerp(t * invLatency);
+                    let lerp = ifaceMetric.metricsLerp;
+                    mIn = lerp.rateIn;
+                    percentIn = mIn * 100.0;
+                    lgIn = logarize(percentIn, amplification, minScale);   
+                    let kf = k * 0.015;
+                    let sclIn = beatScale(kf, 0, lgIn, 0.1, minScale, 1.0);
+                    let sinScl = sclIn * Math.sin(kf) * percentIn + sclIn
+                    mesh.scaling.copyFromFloats(sinScl, sclIn, sinScl);
+                }
+
+                if (renderer.ticked) {      // si un tic s'est produit alors calcule nouvelle SH cible
+                    that.generateHarmonics();
+                    renderer.ticked = false;
+                }
+
+                curT = Date.now();
+                let deltaT = (curT - prevT);
+                k += deltaT;
+                prevT = curT;  
+                mesh.rotation.y += 0.001;
+            });
+             
            return scene;  
         }
     }

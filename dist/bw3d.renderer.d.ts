@@ -18,5 +18,7 @@ declare module BW3D {
         formatFixed(nb: number, fix: number): string;
         maximum(val1: number, val2: number): number;
         startTicker(delay: number): void;
+        beatScale(time: number, shift: number, scaling: number, scalingFactor: number, minScaling: number, sign: number): number;
+        logarize(val: number, amplification: number, factor: number): number;
     }
 }
