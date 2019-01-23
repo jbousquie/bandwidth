@@ -50,6 +50,7 @@ declare module BW3D {
      */
     class Monitor {
         devices: {};
+        deviceNumber: number;
         urlDevices: string;
         urlData: string;
         interfaceData: {};

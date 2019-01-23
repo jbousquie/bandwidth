@@ -74,6 +74,7 @@ module BW3D {
      */
     export class Monitor {
         public devices: {};                     // Annuaire des équipements
+        public deviceNumber: number;            // Nombre d'équipements monitorés
         public urlDevices: string;              // URL de la conf des équipements
         public urlData: string;                 // URL des data
         public interfaceData: {};               // Annuaire des données collectées par interface
@@ -115,6 +116,7 @@ module BW3D {
             xhr.open('GET', url);
             xhr.onload = function(){
                 const loadedDevices = JSON.parse(xhr.responseText);
+                let devCount = 0;
                 for (let d = 0; d < loadedDevices.length; d++) { 
                     let loadedDevice = loadedDevices[d];
                     const monitoredDevice = that.devices[loadedDevice.name];
@@ -148,7 +150,9 @@ module BW3D {
                         }
                         device.interfaceNumber = count;
                     }
+                    devCount++;
                 }
+                that.deviceNumber = devCount;
                 // si le renderer n'est pas déjà démarré, on le lance
                 if (!that.isReady) {
                     that.visualize();
@@ -323,10 +327,9 @@ const init =  function() {
 
     const types = [
         BW3D.Renderer.HeartBeat,
-        BW3D.Renderer.SphericalHarmonics
+        BW3D.Renderer.SphericalHarmonics,
+        BW3D.Renderer.Boxes
         // mettre ici les autres types de rendus possibles
-
-
     ];
 
     let type = types[0];

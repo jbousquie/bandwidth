@@ -19,6 +19,9 @@ module BW3D {
             this.ifaces3d = {};                 // tableau associatif ifaces3d["deviceName@ifaceName"] = particleIdx idx de la particle IN, la particle OUT sera à pIdx + nb
 
             this.scene = this.createScene();
+            
+            // démarrage du ticker
+            renderer.startTicker(this.tickDuration);
         };
 
 
@@ -125,9 +128,6 @@ module BW3D {
             const logarize = renderer.logarize;
             const rgbString = this.rgbString;
 
-            // démarrage du ticker
-            renderer.startTicker(this.tickDuration);
-
             // scene
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0.4, 0.5, 1.0, 1.0);
@@ -182,7 +182,7 @@ module BW3D {
                 }
 
                 let ifaces = dev.interfaces;
-                let size = Object.keys(ifaces).length;
+                let size = dev.interfaceNumber;
                 let halfSize = size * 0.5;
                 b.scaling.x = size;
                 gp.position.z = -0.6;

@@ -36,7 +36,7 @@ module BW3D {
                     let sh = new SphericalHarmonics(this);
                     scene = sh.scene;
                     break;
-                case Renderer.SphericalHarmonics:
+                case Renderer.Boxes:
                     let bx = new Boxes(this);
                     scene = bx.scene;
                 break;

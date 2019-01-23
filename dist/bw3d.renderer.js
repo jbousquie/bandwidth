@@ -22,7 +22,7 @@ var BW3D;
                     let sh = new BW3D.SphericalHarmonics(this);
                     scene = sh.scene;
                     break;
-                case Renderer.SphericalHarmonics:
+                case Renderer.Boxes:
                     let bx = new BW3D.Boxes(this);
                     scene = bx.scene;
                     break;
