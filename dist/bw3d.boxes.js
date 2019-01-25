@@ -12,6 +12,23 @@ var BW3D;
             this.ifaces3d = {}; // tableau associatif ifaces3d["deviceName@ifaceName"] = particleIdx idx de la particle IN, la particle OUT sera à pIdx + nb
             this.scene = this.createScene();
         }
+        // Crée le ribbon portant les informations du device
+        createGUI(device, paths) {
+            const scene = this.scene;
+            let ribbon = BABYLON.MeshBuilder.CreateRibbon("r" + device.name, { pathArray: paths }, scene);
+            device.mesh = ribbon;
+            let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(ribbon, 4096, 256, false);
+            let panel = new BABYLON.GUI.StackPanel();
+            advancedTexture.addControl(panel);
+            let textDeviceName = new BABYLON.GUI.TextBlock();
+            textDeviceName.height = "256px";
+            textDeviceName.fontSize = 250;
+            textDeviceName.text = device.displayName;
+            textDeviceName.color = "white";
+            textDeviceName.outlineWidth = 8;
+            textDeviceName.outlineColor = "black";
+            panel.addControl(textDeviceName);
+        }
         createScene() {
             const monitor = this.monitor;
             const renderer = this.renderer;
@@ -24,8 +41,11 @@ var BW3D;
             const delay = this.tickDuration;
             // Scene
             const scene = new BABYLON.Scene(engine);
-            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI * 0.5, Math.PI * 0.5, 0.0, BABYLON.Vector3.Zero(), scene);
+            scene.clearColor = new BABYLON.Color4(0.15, 0.2, 0.65);
+            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI * 0.5, Math.PI * 0.5, 5.0, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas);
+            camera.wheelPrecision = 80;
+            camera.minZ = 0.001;
             const pl = new BABYLON.PointLight("pl", camera.position, scene);
             pl.specular = BABYLON.Color3.Gray();
             const gl = new BABYLON.GlowLayer('glow', scene);
@@ -48,7 +68,6 @@ var BW3D;
             box.dispose();
             sps.buildMesh();
             sps.computeParticleTexture = false;
-            //sps.computeParticleRotation = false;
             sps.isAlwaysVisible = true;
             sps.mesh.material = mat;
             mat.emissiveColor = BABYLON.Color3.Gray();
@@ -62,6 +81,9 @@ var BW3D;
             const vSlotStep = vMaxAngle / vSlotNb;
             const devNb = monitor.deviceNumber;
             let radius = 20.0;
+            let radiusGUI = radius * 1.0;
+            let angleShift = Math.atan(0.5 / radius); // angle de décalage de chaque box (droite/gauche) sur alpha
+            let betaShift = Math.atan(0.5 / radiusGUI); // angle de décalage des points up/down du ribbon
             let p = 0; // index de particule
             let devCt = 0; // compteur de devices
             for (let d in devices) {
@@ -69,37 +91,80 @@ var BW3D;
                 let ifaces = dev.interfaces;
                 let ifNb = dev.interfaceNumber;
                 let ifCt = 0; // compteur d'interfaces
-                let vMinAng = -devNb * vSlotStep * 0.5;
+                let vMinAng = devNb * vSlotStep * 0.5;
                 let hMinAng = -ifNb * hSlotStep * 0.5;
                 let beta = vMinAng + vSlotStep * devCt;
+                let betaU = beta - 3.0 * betaShift;
+                let betaD = beta - betaShift;
                 let y = radius * Math.sin(beta);
+                let yU = radiusGUI * Math.sin(betaU);
+                let yD = radiusGUI * Math.sin(betaD);
+                let pathUP = [];
+                let pathDown = [];
+                let paths = [];
                 for (let i in ifaces) {
                     let iface = ifaces[i];
                     iface.sps = sps;
                     let sname = d + "@" + i;
                     let sIn = sps.particles[p];
                     let sOut = sps.particles[p + nb];
+                    // positionnement des boites
                     let alpha = hMinAng + hSlotStep * ifCt;
-                    let x = radius * Math.sin(alpha) * Math.cos(beta);
-                    let z = radius * Math.cos(alpha) * Math.cos(beta);
-                    sIn.position.copyFromFloats(x - 0.5, y, z);
+                    let alphaIn = alpha - angleShift;
+                    let alphaOut = alpha + angleShift;
+                    let xIn = radius * Math.sin(alphaIn) * Math.cos(beta);
+                    let xOut = radius * Math.sin(alphaOut) * Math.cos(beta);
+                    let zIn = radius * Math.cos(alphaIn) * Math.cos(beta);
+                    let zOut = radius * Math.cos(alphaOut) * Math.cos(beta);
+                    sIn.position.copyFromFloats(xIn, y, zIn);
                     sIn.color.copyFromFloats(0.0, 1.0, 0.0, 1.0);
-                    sOut.position.copyFromFloats(x + 0.5, y, z);
+                    sOut.position.copyFromFloats(xOut, y, zOut);
                     sOut.color.copyFromFloats(1.0, 0.0, 0.0, 1.0);
-                    sIn.rotation.y = alpha;
-                    sOut.rotation.y = alpha;
-                    sIn.rotation.x = beta;
-                    sOut.rotation.x = beta;
+                    sIn.rotation.y = alphaIn;
+                    sOut.rotation.y = alphaOut;
+                    sIn.rotation.x = -beta;
+                    sOut.rotation.x = -beta;
+                    // construction de la geometrie du ribbon
+                    let xU = radiusGUI * Math.sin(alpha) * Math.cos(betaU);
+                    let zU = radiusGUI * Math.cos(alpha) * Math.cos(betaU);
+                    let xD = radiusGUI * Math.sin(alpha) * Math.cos(betaD);
+                    let zD = radiusGUI * Math.cos(alpha) * Math.cos(betaD);
+                    let vU = new BABYLON.Vector3(xU, yU, zU);
+                    let vD = new BABYLON.Vector3(xD, yD, zD);
+                    pathUP.push(vU);
+                    pathDown.push(vD);
                     ifaces3d[sname] = p;
                     p++;
                     ifCt++;
                 }
                 devCt++;
+                paths.push(pathUP, pathDown);
+                this.createGUI(dev, paths);
             }
             ;
             sps.setParticles();
             sps.refreshVisibleSize();
-            //sps.mesh.freezeWorldMatrix();
+            sps.computeParticleRotation = false;
+            sps.mesh.freezeWorldMatrix();
+            // Creation d'une icosphere de repérage
+            const ico = BABYLON.MeshBuilder.CreateIcoSphere("ico", { radius: radius * 1.5, subdivisions: 6, sideOrientation: BABYLON.Mesh.BACKSIDE }, scene);
+            const icoMat = new BABYLON.StandardMaterial("im", scene);
+            icoMat.wireframe = true;
+            icoMat.alpha = 0.2;
+            ico.material = icoMat;
+            ico.freezeWorldMatrix();
+            ico.alwaysSelectAsActiveMesh = true;
+            const ground = BABYLON.MeshBuilder.CreateDisc("disc", { radius: radius * 0.25, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+            ground.rotation.x = Math.PI * 0.5;
+            ground.position.y = -radius * 0.25;
+            const groundMat = new BABYLON.StandardMaterial("gm", scene);
+            groundMat.alpha = 0.5;
+            groundMat.emissiveColor = BABYLON.Color3.Blue();
+            ground.material = groundMat;
+            ground.freezeWorldMatrix();
+            ground.alwaysSelectAsActiveMesh = true;
+            gl.addExcludedMesh(ico);
+            gl.addExcludedMesh(ground);
             // Animation
             let t = 0.0; // temps écoulé entre deux périodes de latence
             let k = 0.0; // mesure du temps en ms

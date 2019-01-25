@@ -34,9 +34,9 @@ var BW3D;
                 let g = dev.guiMesh;
                 let mesh = dev.mesh;
                 let xPixels = Math.ceil(mesh.scaling.x * 256);
-                let advandedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 960, false); // texture : device + metrics
-                let advandedTextureIface = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(dev.mesh, xPixels, 768, false); // texture : interfaces
-                advandedTextureIface.background = "white";
+                let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(g, xPixels, 960, false); // texture : device + metrics
+                let advancedTextureIface = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(dev.mesh, xPixels, 768, false); // texture : interfaces
+                advancedTextureIface.background = "white";
                 let mat = dev.mesh.material;
                 mat.diffuseColor.copyFromFloats(1.0, 1.0, 1.0);
                 mat.diffuseTexture = mat.emissiveTexture; // https://forum.babylonjs.com/t/gui-advanced-dynamic-texture-not-transparent/784/4?u=jerome
@@ -45,7 +45,7 @@ var BW3D;
                 mat.backFaceCulling = true;
                 // nom du device
                 let panelGlobal = new BABYLON.GUI.StackPanel(); // panel global = nom device + panel mesures, texture du guiPlane
-                advandedTexture.addControl(panelGlobal);
+                advancedTexture.addControl(panelGlobal);
                 let textDeviceName = new BABYLON.GUI.TextBlock();
                 textDeviceName.height = "256px";
                 textDeviceName.fontSize = 250;
@@ -56,7 +56,7 @@ var BW3D;
                 panelGlobal.addControl(textDeviceName);
                 // nom des interfaces et valeur des métriques
                 let panelIfaces = new BABYLON.GUI.StackPanel(); // panel des noms d'interface servant de texture au mesh device  
-                advandedTextureIface.addControl(panelIfaces);
+                advancedTextureIface.addControl(panelIfaces);
                 let panelIfaceNames = new BABYLON.GUI.StackPanel();
                 panelIfaceNames.isVertical = false;
                 let panelMetricsIN = new BABYLON.GUI.StackPanel(); // panel des mesures in

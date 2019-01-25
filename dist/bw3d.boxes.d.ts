@@ -10,6 +10,7 @@ declare module BW3D {
         ifaces3d: {};
         tickDuration: number;
         constructor(renderer: Renderer);
+        createGUI(device: Device, paths: BABYLON.Vector3[][]): void;
         createScene(): BABYLON.Scene;
     }
 }
