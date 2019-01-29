@@ -21,6 +21,8 @@ module BW3D {
         public ribbonOptions: any;
         private _morphing: boolean = false;
         private _currentStep: number = 0;
+        public reached: boolean = false;
+
 
         constructor(renderer: Renderer) {
             this.renderer = renderer;
@@ -219,11 +221,7 @@ module BW3D {
             let amplification = 1000.0;
 
             scene.registerBeforeRender(function () {
-                // reset eventuel de t
-                t += engine.getDeltaTime();
-                if (t > latency) {
-                    t = 0.0;
-                }
+
                 if (that._morphing) {       // si morphing en cours non terminé
                     that.morphRibbon();
                 }
@@ -240,12 +238,20 @@ module BW3D {
                 let lgIn = 0.0;
 
                 if (m) {
-                    ifaceMetric.updateMetricsLerp(t * invLatency);
+                    // reset eventuel de t
+                    t += engine.getDeltaTime();
+                    if (t > latency) {
+                        that.reached = true;
+                        t = 0.0;
+                    }
+                    if (!that.reached) {
+                        ifaceMetric.updateMetricsLerp(t * invLatency)
+                    }
                     let lerp = ifaceMetric.metricsLerp;
                     mIn = lerp.rateIn;
-                    percentIn = mIn * 10.0;
+                    percentIn = mIn * 100.0;
                     lgIn = logarize(percentIn, amplification, minScale);   
-                    let kf = k * 0.02;
+                    let kf = k * 0.01;
                     let sclIn = beatScale(kf, 0, lgIn, 0.1, minScale, 1.0);
                     let sinScl = sclIn * Math.sin(kf) * percentIn + sclIn
                     mesh.scaling.copyFromFloats(sinScl, sclIn, sinScl);
@@ -254,6 +260,12 @@ module BW3D {
                 if (renderer.ticked) {      // si un tic s'est produit alors calcule nouvelle SH cible
                     that.generateHarmonics();
                     renderer.ticked = false;
+                }
+
+
+                if (renderer.updatedMetrics) {      // si une nouvelle mesure disponible
+                    renderer.updatedMetrics = false;
+                    that.reached = false;
                 }
 
                 curT = Date.now();

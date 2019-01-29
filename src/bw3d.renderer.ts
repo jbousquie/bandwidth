@@ -14,6 +14,7 @@ module BW3D {
         public static HeartBeat = 0;
         public static SphericalHarmonics = 1;
         public static Boxes = 2;
+        public static Gauge = 3;
 
         constructor(monitor: Monitor, type: number) {
             this.monitor = monitor;
@@ -39,6 +40,10 @@ module BW3D {
                 case Renderer.Boxes:
                     let bx = new Boxes(this);
                     scene = bx.scene;
+                break;
+                case Renderer.Gauge:
+                    let gg = new Gauge(this);
+                    scene = gg.scene;
                 break;
                 default:
                     hb = new HeartBeat(this);

@@ -12,6 +12,7 @@ declare module BW3D {
         static HeartBeat: number;
         static SphericalHarmonics: number;
         static Boxes: number;
+        static Gauge: number;
         constructor(monitor: Monitor, type: number);
         start(): Renderer;
         notify(message: string): Renderer;

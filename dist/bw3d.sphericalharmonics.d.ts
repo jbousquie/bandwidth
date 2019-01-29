@@ -20,6 +20,7 @@ declare module BW3D {
         ribbonOptions: any;
         private _morphing;
         private _currentStep;
+        reached: boolean;
         constructor(renderer: Renderer);
         /**
          * Met à jour les paths selon la fonction harmonique

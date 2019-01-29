@@ -3,6 +3,7 @@ var BW3D;
     class HeartBeat {
         constructor(renderer) {
             this.tickDuration = 600;
+            this.reached = false;
             this.renderer = renderer;
             this.engine = renderer.engine;
             this.canvas = renderer.canvas;
@@ -203,12 +204,9 @@ var BW3D;
             let prevT = Date.now(); // date précédente
             let curT = prevT; // date courante
             let minScale = 0.1; // valeur min du scaling des particules
+            const that = this;
             scene.onBeforeRenderObservable.add(function () {
-                // reset eventuel de t
                 t += engine.getDeltaTime();
-                if (t > latency) {
-                    t = 0.0;
-                }
                 let counter = 0; // compteur de particule
                 for (let i in interfaceMetrics) {
                     let ifaceMetric = interfaceMetrics[i];
@@ -226,7 +224,14 @@ var BW3D;
                     let percentOut = 0.0; // pourcentage de la mesure OUT
                     let amplification = 1000.0;
                     if (m && lastMetric) {
-                        ifaceMetric.updateMetricsLerp(t * invLatency);
+                        // reset eventuel de t
+                        if (t > latency) {
+                            that.reached = false;
+                            t = 0.0;
+                        }
+                        if (!that.reached) {
+                            ifaceMetric.updateMetricsLerp(t * invLatency);
+                        }
                         let lerp = ifaceMetric.metricsLerp;
                         // scaling des particules
                         mIn = lerp.rateIn;
@@ -252,6 +257,10 @@ var BW3D;
                         }
                     }
                     counter++;
+                }
+                if (renderer.updatedMetrics) { // si une nouvelle mesure disponible
+                    renderer.updatedMetrics = false;
+                    that.reached = false;
                 }
                 sps.setParticles();
                 curT = Date.now();

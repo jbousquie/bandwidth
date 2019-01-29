@@ -10,6 +10,7 @@ module BW3D {
         public interfaceMetrics: {}
         public ifaces3d: {};
         public tickDuration: number = 12000;
+        public reached: boolean = false;
 
         constructor(renderer: Renderer) {
             this.renderer = renderer;
@@ -51,7 +52,6 @@ module BW3D {
             const interfaceMetrics = this.interfaceMetrics;
             const ifaces3d = this.ifaces3d;
             const logarize = renderer.logarize;
-            const delay = this.tickDuration;
 
             // Scene
             const scene = new BABYLON.Scene(engine);
@@ -193,19 +193,15 @@ module BW3D {
 
             // Animation
             let t = 0.0;                    // temps écoulé entre deux périodes de latence
-            let k = 0.0;                    // mesure du temps en ms
-            let latency = 600;             // latence pour passer d'une valeur mesurée à la suivante, en ms
+            let latency = 1800;             // latence pour passer d'une valeur mesurée à la suivante, en ms
             let invLatency = 1.0 / latency; // inverse de la latence
             let prevT = Date.now();         // date précédente
             let curT = prevT;               // date courante
             let minScale = 0.1;             // valeur min du scaling des particules
+            const that = this;
 
             scene.onBeforeRenderObservable.add(function() {
-                // reset eventuel de t
                 t += engine.getDeltaTime();
-                if (t > latency) {
-                    t = 0.0;
-                }
 
                 let counter = 0;                            // compteur de particule
                 for (let i in interfaceMetrics) {
@@ -225,7 +221,14 @@ module BW3D {
                     let amplification = 1000.0;
                     
                     if (m && lastMetric) {
-                        ifaceMetric.updateMetricsLerp(t * invLatency);
+                        // reset eventuel de t
+                        if (t > latency) {
+                            t = 0.0;
+                            that.reached = true;   
+                        }
+                        if (!that.reached) {
+                            ifaceMetric.updateMetricsLerp(t * invLatency);
+                        }
                         let lerp = ifaceMetric.metricsLerp;
 
                         // scaling des particules
@@ -239,26 +242,16 @@ module BW3D {
                         iface3dIn.scaling.y = lgIn;
                         iface3dOut.scaling.y = lgOut;
 
-                        // coloration du texte des interfaces
-                        /*
-                        if (renderer.ticked) {
-                            let iface = interfaceMetrics[i];
-                            let textIn = iface.guiIN;
-                            let textOut = iface.guiOUT;
-                            textIn.color = rgbString(mIn);
-                            textOut.color = rgbString(mOut);
-                            textIn.text = renderer.formatFixed(percentIn, 1);
-                            textOut.text = renderer.formatFixed(percentOut, 1);
-                        }
-                        */
                     }
                     counter++;
                 }
-
+                if (renderer.updatedMetrics) {      // si une nouvelle mesure disponible
+                    renderer.updatedMetrics = false;
+                    that.reached = false;
+                }
                 sps.setParticles();
                 curT = Date.now();
                 let deltaT = (curT - prevT);
-                k += deltaT;
                 prevT = curT;  
                 renderer.ticked = false;
             });

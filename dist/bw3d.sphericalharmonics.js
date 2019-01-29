@@ -9,6 +9,7 @@ var BW3D;
             this.tickDuration = 12000;
             this._morphing = false;
             this._currentStep = 0;
+            this.reached = false;
             this.renderer = renderer;
             this.engine = renderer.engine;
             this.canvas = renderer.canvas;
@@ -190,11 +191,6 @@ var BW3D;
             let minScale = 0.75; // valeur min du scaling du mesh
             let amplification = 1000.0;
             scene.registerBeforeRender(function () {
-                // reset eventuel de t
-                t += engine.getDeltaTime();
-                if (t > latency) {
-                    t = 0.0;
-                }
                 if (that._morphing) { // si morphing en cours non terminé
                     that.morphRibbon();
                 }
@@ -209,12 +205,20 @@ var BW3D;
                 let percentIn = 0.0;
                 let lgIn = 0.0;
                 if (m) {
-                    ifaceMetric.updateMetricsLerp(t * invLatency);
+                    // reset eventuel de t
+                    t += engine.getDeltaTime();
+                    if (t > latency) {
+                        that.reached = true;
+                        t = 0.0;
+                    }
+                    if (!that.reached) {
+                        ifaceMetric.updateMetricsLerp(t * invLatency);
+                    }
                     let lerp = ifaceMetric.metricsLerp;
                     mIn = lerp.rateIn;
-                    percentIn = mIn * 10.0;
+                    percentIn = mIn * 100.0;
                     lgIn = logarize(percentIn, amplification, minScale);
-                    let kf = k * 0.02;
+                    let kf = k * 0.01;
                     let sclIn = beatScale(kf, 0, lgIn, 0.1, minScale, 1.0);
                     let sinScl = sclIn * Math.sin(kf) * percentIn + sclIn;
                     mesh.scaling.copyFromFloats(sinScl, sclIn, sinScl);
@@ -222,6 +226,10 @@ var BW3D;
                 if (renderer.ticked) { // si un tic s'est produit alors calcule nouvelle SH cible
                     that.generateHarmonics();
                     renderer.ticked = false;
+                }
+                if (renderer.updatedMetrics) { // si une nouvelle mesure disponible
+                    renderer.updatedMetrics = false;
+                    that.reached = false;
                 }
                 curT = Date.now();
                 let deltaT = (curT - prevT);

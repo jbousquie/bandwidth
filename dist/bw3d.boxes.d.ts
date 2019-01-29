@@ -9,6 +9,7 @@ declare module BW3D {
         interfaceMetrics: {};
         ifaces3d: {};
         tickDuration: number;
+        reached: boolean;
         constructor(renderer: Renderer);
         createGUI(device: Device, paths: BABYLON.Vector3[][]): void;
         createScene(): BABYLON.Scene;

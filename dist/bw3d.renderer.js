@@ -26,6 +26,10 @@ var BW3D;
                     let bx = new BW3D.Boxes(this);
                     scene = bx.scene;
                     break;
+                case Renderer.Gauge:
+                    let gg = new BW3D.Gauge(this);
+                    scene = gg.scene;
+                    break;
                 default:
                     hb = new BW3D.HeartBeat(this);
                     scene = hb.scene;
@@ -118,6 +122,7 @@ var BW3D;
     Renderer.HeartBeat = 0;
     Renderer.SphericalHarmonics = 1;
     Renderer.Boxes = 2;
+    Renderer.Gauge = 3;
     BW3D.Renderer = Renderer;
 })(BW3D || (BW3D = {}));
 //# sourceMappingURL=bw3d.renderer.js.map

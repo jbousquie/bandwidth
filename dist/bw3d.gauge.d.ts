@@ -1,17 +1,16 @@
 declare module BW3D {
-    class HeartBeat {
+    class Gauge {
         scene: BABYLON.Scene;
         renderer: Renderer;
+        monitor: Monitor;
         engine: BABYLON.Engine;
         canvas: HTMLCanvasElement;
         devices: {};
         interfaceMetrics: {};
-        ifaces3d: {};
+        mesh: BABYLON.Mesh;
         tickDuration: number;
         reached: boolean;
         constructor(renderer: Renderer);
-        rgbString(val: number): string;
-        createGUI(): void;
         createScene(): BABYLON.Scene;
     }
 }
