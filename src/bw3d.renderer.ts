@@ -15,6 +15,7 @@ module BW3D {
         public static SphericalHarmonics = 1;
         public static Boxes = 2;
         public static Gauge = 3;
+        public static WeatherMap = 4;
 
         constructor(monitor: Monitor, type: number) {
             this.monitor = monitor;
@@ -45,9 +46,13 @@ module BW3D {
                     let gg = new Gauge(this);
                     scene = gg.scene;
                 break;
+                case Renderer.WeatherMap:
+                    let wm = new WeatherMap(this);
+                    scene = wm.scene;
+            break;
                 default:
-                    hb = new HeartBeat(this);
-                    scene = hb.scene;
+                    let def = new HeartBeat(this);
+                    scene = def.scene;
             }
 
             window.addEventListener("resize", function() {

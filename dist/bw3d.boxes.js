@@ -169,13 +169,10 @@ var BW3D;
             let t = 0.0; // temps écoulé entre deux périodes de latence
             let latency = 1800; // latence pour passer d'une valeur mesurée à la suivante, en ms
             let invLatency = 1.0 / latency; // inverse de la latence
-            let prevT = Date.now(); // date précédente
-            let curT = prevT; // date courante
             let minScale = 0.1; // valeur min du scaling des particules
             const that = this;
             scene.onBeforeRenderObservable.add(function () {
                 t += engine.getDeltaTime();
-                let counter = 0; // compteur de particule
                 for (let i in interfaceMetrics) {
                     let ifaceMetric = interfaceMetrics[i];
                     let p = ifaces3d[i]; // index de la particule dans le SPS
@@ -211,16 +208,12 @@ var BW3D;
                         iface3dIn.scaling.y = lgIn;
                         iface3dOut.scaling.y = lgOut;
                     }
-                    counter++;
                 }
                 if (renderer.updatedMetrics) { // si une nouvelle mesure disponible
                     renderer.updatedMetrics = false;
                     that.reached = false;
                 }
                 sps.setParticles();
-                curT = Date.now();
-                let deltaT = (curT - prevT);
-                prevT = curT;
                 renderer.ticked = false;
             });
             return scene;

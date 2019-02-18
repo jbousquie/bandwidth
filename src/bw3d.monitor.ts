@@ -329,7 +329,8 @@ const init =  function() {
         BW3D.Renderer.HeartBeat,
         BW3D.Renderer.SphericalHarmonics,
         BW3D.Renderer.Boxes,
-        BW3D.Renderer.Gauge
+        BW3D.Renderer.Gauge,
+        BW3D.Renderer.WeatherMap
         // mettre ici les autres types de rendus possibles
     ];
 

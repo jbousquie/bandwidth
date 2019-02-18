@@ -13,13 +13,10 @@ var BW3D;
             this.scene = this.createScene();
         }
         createScene() {
-            const monitor = this.monitor;
             const renderer = this.renderer;
             const canvas = this.canvas;
             const engine = this.engine;
-            const devices = this.devices;
             const interfaceMetrics = this.interfaceMetrics;
-            const logarize = renderer.logarize;
             // Scene
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0.15, 0.2, 0.65);
@@ -38,7 +35,8 @@ var BW3D;
             needle.computeWorldMatrix(true);
             needle.material = needlemMat;
             this.mesh = needle;
-            const dial = BABYLON.MeshBuilder.CreateDisc("d", { radius: needleLength * 1.25, arc: 0.5 }, scene);
+            let dialOptions = { radius: needleLength * 1.25, arc: 0.5 };
+            const dial = BABYLON.MeshBuilder.CreateDisc("d", dialOptions, scene);
             dial.position.z = 0.2;
             // Animation
             let that = this;
@@ -70,7 +68,6 @@ var BW3D;
                         let lerp = ifaceMetric.metricsLerp;
                         mIn = lerp.rateIn;
                         percentIn = mIn * 10.0;
-                        //lgIn = logarize(percentIn, amplification, minScale);  
                         needle.rotation.z = Math.PI * (1.0 - percentIn);
                     }
                 }

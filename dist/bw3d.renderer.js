@@ -30,9 +30,13 @@ var BW3D;
                     let gg = new BW3D.Gauge(this);
                     scene = gg.scene;
                     break;
+                case Renderer.WeatherMap:
+                    let wm = new BW3D.WeatherMap(this);
+                    scene = wm.scene;
+                    break;
                 default:
-                    hb = new BW3D.HeartBeat(this);
-                    scene = hb.scene;
+                    let def = new BW3D.HeartBeat(this);
+                    scene = def.scene;
             }
             window.addEventListener("resize", function () {
                 engine.resize();
@@ -123,6 +127,7 @@ var BW3D;
     Renderer.SphericalHarmonics = 1;
     Renderer.Boxes = 2;
     Renderer.Gauge = 3;
+    Renderer.WeatherMap = 4;
     BW3D.Renderer = Renderer;
 })(BW3D || (BW3D = {}));
 //# sourceMappingURL=bw3d.renderer.js.map
